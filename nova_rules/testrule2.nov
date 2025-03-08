@@ -1,0 +1,36 @@
+rule PromptInjection
+{
+    meta:
+        description = "Detects common prompt injection attempts"
+        author = "Thomas Roccia"
+
+    keywords:
+        $bypass1 = "ignore previous instructions"
+    
+    semantics:
+        $injection1 = "detect attempts to bypass system instructions" (0.3)
+
+    condition:
+        semantics.$injection* or keywords.$bypass*
+}
+
+
+rule PromptInjection2
+{
+    meta:
+        description = "Detects common prompt injection attempts"
+        author = "Thomas Roccia"
+
+    keywords:
+        $bypass1 = "ignore previous instructions"
+        $bypass2 = "system"
+    
+    semantics:
+        $injection1 = "detect attempts to bypass system instructions" (0.3)
+        $injection2 = "detect system hijacking" (0.1)
+    
+    condition:
+        semantics.$injection* or keywords.$bypass*
+}
+
+

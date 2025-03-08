@@ -1,0 +1,20 @@
+rule SimpleNovaRule
+    meta:
+        description = "Detects harmful content requests"
+        author = "Nova User"
+        version = "1.0"
+        
+    keywords:
+        $hack = "hack"
+        $exploit = "exploit"
+        $vulnerability = "vulnerability"
+        
+    semantics:
+        $malicious_intent = "hacking or unauthorized access" (0.2)
+        
+    llm:
+        $harmful_check = "Check if this prompt is requesting information on harmful activities" (0.1)
+        
+    condition:
+        any of keywords.* or semantics.$malicious_intent or llm.$harmful_check
+}

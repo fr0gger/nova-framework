@@ -1,0 +1,11 @@
+mkdocs-material
+mkdocs
+mkdocs-material[imaging]
+sentence-transformers
+transformers
+requests
+pyyaml
+colorama
+openai
+anthropic
+pytest
