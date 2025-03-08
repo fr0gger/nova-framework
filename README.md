@@ -1,7 +1,5 @@
 # NOVA: The Prompt Pattern Matching
 
-![GitHub](https://img.shields.io/github/fr0gger/nova-framework)
-
 <p align="center">
     <img src="nova_doc/docs/nova.svg" alt="NOVA Logo">
 </p>
