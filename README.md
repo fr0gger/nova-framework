@@ -14,7 +14,7 @@ That's where NOVA comes in!
 
 NOVA is an open-source prompt pattern matching system combining keyword detection, semantic similarity, and LLM-based evaluation to analyze and detect prompt content.
 
-![Alt Text](first.gif)
+[![asciicast](https://asciinema.org/a/693ywQk773innmLpYrMx0viOF.svg)](https://asciinema.org/a/693ywQk773innmLpYrMx0viOF)
 
 ## Features
 
