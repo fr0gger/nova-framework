@@ -16,7 +16,7 @@ copyright: "Copyright &copy; 2025 fr0gger"
 theme:
   name: material
   logo: 'novalogo.svg'
-  favicon: 'favicon.ico'
+  favicon: 'favicon.png'
   icon:
     repo: fontawesome/brands/github 
   palette:
