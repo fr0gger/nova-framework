@@ -51,7 +51,7 @@ rule RuleName
 ## Getting Started
 
 ```bash
-pip install nova-framework
+pip install nova-hunting
 ```
 
 ## License
