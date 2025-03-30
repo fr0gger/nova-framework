@@ -16,7 +16,7 @@ If you add an incident, add it to the table below for ease of use.
 
 ## Reports
 
-1. Microsoft, Feb 2024 (https://cdn.openai.com/threat-intelligence-reports)
+1. Microsoft, Feb 2024 (https://www.microsoft.com/en-us/security/blog/2024/02/14/staying-ahead-of-threat-actors-in-the-age-of-ai/)
 
 2. OpenAI, May 2024 (https://downloads.ctfassets.net/kftzwdyauwt9/5IMxzTmUclSOAcWUXbkVrK/3cfab518e6b10789ab8843bcca18b633/Threat_Intel_Report.pdf)
 
