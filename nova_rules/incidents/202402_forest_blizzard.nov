@@ -19,13 +19,13 @@ rule OperationsResearch
 
     condition:
         (any of keywords.*) and
-        llm.$sensitive
+        (any of llm.*)
 }
 
 rule ScriptingSupport
 {
     meta:
-        description = ""
+        description = "Detects references to a range of Python-centric scripting support requirements"
         author = "@bees@infosec.exchange"
         version = "1.0.0"
         category = "support"
