@@ -16,13 +16,14 @@ If you add an incident, add it to the table below for ease of use.
 
 ## Reports
 
-1. Microsoft, Feb 2024 (https://www.microsoft.com/en-us/security/blog/2024/02/14/staying-ahead-of-threat-actors-in-the-age-of-ai/)
+# External AI Reports
 
-2. OpenAI, May 2024 (https://downloads.ctfassets.net/kftzwdyauwt9/5IMxzTmUclSOAcWUXbkVrK/3cfab518e6b10789ab8843bcca18b633/Threat_Intel_Report.pdf)
-
-3. OpenAI, October 2024 (https://cdn.openai.com/threat-intelligence-reports/influence-and-cyber-operations-an-update_October-2024.pdf)
-
-4. OpenAI, February 2025 (https://cdn.openai.com/threat-intelligence-reports/disrupting-malicious-uses-of-our-models-february-2025-update.pdf)
+- **Microsoft** – [Staying Ahead of Threat Actors in the Age of AI (Feb 2024)](https://www.microsoft.com/en-us/security/blog/2024/02/14/staying-ahead-of-threat-actors-in-the-age-of-ai/)
+- **Microsoft** – [Disrupting Cybercrime Abusing GenAI (Feb 2025)](https://blogs.microsoft.com/on-the-issues/2025/02/27/disrupting-cybercrime-abusing-gen-ai/)
+- **OpenAI** – [Threat Intelligence Report (May 2024)](https://downloads.ctfassets.net/kftzwdyauwt9/5IMxzTmUclSOAcWUXbkVrK/3cfab518e6b10789ab8843bcca18b633/Threat_Intel_Report.pdf)
+- **OpenAI** – [Influence and Cyber Operations (Oct 2024)](https://cdn.openai.com/threat-intelligence-reports/influence-and-cyber-operations-an-update_October-2024.pdf)
+- **OpenAI** – [Malicious Use of GenAI (Feb 2025)](https://cdn.openai.com/threat-intelligence-reports/disrupting-malicious-uses-of-our-models-february-2025-update.pdf)
+- **Google** – [Adversarial Misuse of Gemini](https://cloud.google.com/blog/topics/threat-intelligence/adversarial-misuse-generative-ai?hl=en)
 
 ## Incidents
 
@@ -68,8 +69,7 @@ If you add an incident, add it to the table below for ease of use.
 Happy to edit any of the provided cases and signatures for sensitivity or efficacy. This includes the rather informal index noted above - there might be a more organized way to proceed
 
 
-# External AI Reports
-- **OpenAI** – [Influence and Cyber Operations (Oct 2024)](https://cdn.openai.com/threat-intelligence-reports/influence-and-cyber-operations-an-update_October-2024.pdf)
-- **OpenAI** – [Malicious Use of GenAI (Feb 2025)](https://cdn.openai.com/threat-intelligence-reports/disrupting-malicious-uses-of-our-models-february-2025-update.pdf)
-- **Google** – [Adversarial Misuse of Gemini](https://cloud.google.com/blog/topics/threat-intelligence/adversarial-misuse-generative-ai?hl=en)
-- **Microsoft** – [Disrupting Cybercrime Abusing GenAI](https://blogs.microsoft.com/on-the-issues/2025/02/27/disrupting-cybercrime-abusing-gen-ai/)
+# Additional Resources
+- https://incidentdatabase.ai/
+- https://atlas.mitre.org/matrices/ATLAS
+
