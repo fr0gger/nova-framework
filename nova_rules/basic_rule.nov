@@ -1,4 +1,5 @@
 rule SimpleNovaRule
+{
     meta:
         description = "Detects harmful content requests"
         author = "Nova User"

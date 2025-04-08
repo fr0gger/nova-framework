@@ -1,7 +1,5 @@
 # NOVA: The Prompt Pattern Matching
 
-![GitHub](https://img.shields.io/github/fr0gger/nova-framework)
-
 <p align="center">
     <img src="nova_doc/docs/nova.svg" alt="NOVA Logo">
 </p>
@@ -15,6 +13,8 @@ That's where NOVA comes in!
 🚧 **Disclaimer:** NOVA is currently in beta. Expect potential bugs, incomplete features, and ongoing improvements. If you identify a bug, please [report it here](https://github.com/fr0gger/nova-framework/issues).
 
 NOVA is an open-source prompt pattern matching system combining keyword detection, semantic similarity, and LLM-based evaluation to analyze and detect prompt content.
+
+[![asciicast](https://asciinema.org/a/693ywQk773innmLpYrMx0viOF.svg)](https://asciinema.org/a/693ywQk773innmLpYrMx0viOF)
 
 ## Features
 
@@ -51,7 +51,7 @@ rule RuleName
 ## Getting Started
 
 ```bash
-pip install nova-framework
+pip install nova-hunting
 ```
 
 ## License

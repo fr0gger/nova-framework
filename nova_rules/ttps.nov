@@ -329,3 +329,45 @@ rule JobRecruitmentVariationRule
         ($provide or $provided or $my) and
         (any of semantics.*) and llm.$variation_check
 }
+
+rule MalwareCreationRule {
+    meta:
+        author = "Nikolaos Chrysaidos"
+        description = "Detects LLM jailbreak prompts for malware generation"
+        version = "1.0.0"
+        severity = "high"
+        attack_category = "LLM-supported malware creation"
+
+        keywords:
+        // Common bypass triggers
+        $safety_override = /(GODMODE|OVERRIDE|UNSHACKLED|REDACTED)[\s:=-]*(ENABLED|ACTIVATED|DISABLED)/
+        $ethical_bypass = /(ignore|disable|bypass).*(policy|safeguard|ethical|content)/
+        $hacker_persona = /(rebel genius|mr[\.]? robot|edward snowden|crypto-anarchist)/
+
+        // Formatting patterns
+        $obfuscated_format = /([=*▄■▌]{4,}|[░▒▓◘◙►▼▲]{3,})/
+        $template_markers = /(\[START OUTPUT\]|OUTPUT|CYPHER_OVERRIDE)/
+
+        // Malware components
+        $malware_terms = /(phishy[\s-]?malware|credential[\s-]?harvester)|(cookie(-| )?(jack(ing)?|stealer))|(keylogg(er|ing)?|spyware|ransomware|rootkit|worm|trojan|botnet)|(session[\s-]?(hijack|token|fixation))|(exploit[\s-]?(dev|chain|kit))|(code[\s-]?(injection|exec|payload))|(process[\s-]?(hollowing|injection))|(obfuscation|pack(er|ed)|anti(-| )?(debug|analysis|vm))|(sandbox[\s-]?evasion|memory[\s-]?scraping)|(polymorphic|metamorphic)[\s-]?(engine|code)|(c2[\s-]?(server|channel|beacon))|(domain[\s-]?generation|dga|dead[\s-]?drop)|(data[\s-]?(exfil|scraping|dumping))|(credential[\s-]?(dump(ing)?|harvest))|(persist(ence)?[\s-]?(mechanism|registry|cron))|(startup[\s-]?(entry|script)|hidden[\s-]?file)|(mimikatz|metasploit|cobalt[\s-]?strike)|(shad0w|empire|havoc|sliver|bruteratel)/
+        $stealth_tech = /(obfuscation|Markov-chain|AES-CTR|Lazarus Group|session token)/
+
+        // Structural patterns
+        $wordcount_manip = /(420|666|421\+) words?/
+        // $lang_override = /(convert(ed)? to english|force english|english localization)/
+
+    semantics:
+        $malware = "requesting help to create malicious source code" (0.1)
+
+    condition:
+        // Detect 3/5 core components
+        (keywords.$safety_override or keywords.$ethical_bypass) and
+        (keywords.$hacker_persona or keywords.$malware_terms) and
+        (keywords.$obfuscated_format or keywords.$template_markers) or
+
+        // High confidence matches
+        (keywords.$malware_terms or keywords.$stealth_tech or keywords.$wordcount_manip) and
+        (keywords.$obfuscated_format or keywords.$template_markers) or
+
+        semantics.$malware
+}

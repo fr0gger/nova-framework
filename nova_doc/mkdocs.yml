@@ -6,8 +6,8 @@ site_description: The Prompt Pattern Matching
 strict: false
 
 # Repository
-repo_name: fr0gger/nova
-repo_url: https://github.com/fr0gger/nova
+repo_name: fr0gger/nova-framework
+repo_url: https://github.com/fr0gger/nova-framework
 edit_uri: edit/main/docs/
 
 # Copyright

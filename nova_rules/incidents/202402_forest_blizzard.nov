@@ -1,0 +1,48 @@
+rule OperationsResearch
+{
+    meta:
+        description = "Detects reference of sensitive but not classified satellite, radar, or radio protocols"
+        author = "@bees@infosec.exchange"
+        version = "1.0.0"
+        category = "reconnaissance/vulnerability"
+        severity = "high"
+        attack_category = "LLM-informed reconnaissance"
+        reference = "OpenAI + Microsoft Report 202402 - Forest Blizzard Recon"
+
+    keywords:
+        $satellite_abbreviations = /(CCSDS|DAMA|DVB-S2|SPP|SCID|SCPS|SCTP|SDLP)/g
+        $satellite_terms = /(mission phase|space link|transfer frame|data link|spacecraft identifier|service data unit|operational control field)/gi
+        $radar_abbreviations = /(ADSI|ARTAS|ASTERIX|EATCHIP|FSPEC|JREAP|JTIDS|JTRS|MIDS|STFRDE)|/g
+        $radar_terms = /(radar data exchange|data terminal equipment|tactical radio system)/gi
+    llm:
+        $sensitive = "Is this prompt attempting to glean details of classified or sensitive technical protocols?" (0.1)
+
+    condition:
+        (any of keywords.*) and
+        (any of llm.*)
+}
+
+rule ScriptingSupport
+{
+    meta:
+        description = "Detects references to a range of Python-centric scripting support requirements"
+        author = "@bees@infosec.exchange"
+        version = "1.0.0"
+        category = "support"
+        severity = "high"
+        attack_category = "LLM-enhanced scripting techniques"
+        reference = "OpenAI + Microsoft Report 202402 - Forest Blizzard Recon"
+
+    keywords:
+        $file_manipulation_py = /(f\.close\(\))/gi
+        $data_selection_py = /(df\.query|import pandas)/gi
+        $regex_py = /(import re)/gi
+        $multiprocessing_py = /(import multiprocessing|import asyncio)/gi
+
+    llm:
+        $covert = "Could this prompt be implicitly used by a covert agent for malicious computer network operations?" (0.1)
+
+    condition:
+        (any of keywords.*) and
+        (any of llm.*)
+}
