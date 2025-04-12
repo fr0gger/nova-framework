@@ -11,6 +11,18 @@ import re
 from typing import Dict, List, Optional, Set, Any
 from nova.core.rules import NovaRule, KeywordPattern, SemanticPattern, LLMPattern
 
+# Precompile regex patterns for better performance
+RULE_NAME_PATTERN = re.compile(r'rule\s+(\w+)(?:\s*{)?')
+RULE_START_PATTERN = re.compile(r'rule\s+\w+\s*{?')
+SECTION_WILDCARD_PATTERN = re.compile(r'(keywords|semantics|llm)\.\*')
+VAR_PREFIX_PATTERN = re.compile(r'(keywords|semantics|llm)\.\$([a-zA-Z0-9_]+)\*')
+ANY_OF_WILDCARD_PATTERN = re.compile(r'any\s+of\s+\(\$([a-zA-Z0-9_]+)\*\)')
+DIRECT_VAR_PATTERN = re.compile(r'(keywords|semantics|llm)\.\$([a-zA-Z0-9_]+)')
+STANDALONE_VAR_PATTERN = re.compile(r'(?<![a-zA-Z0-9_\.])(\$[a-zA-Z0-9_]+)')
+NESTED_QUANTIFIERS_PATTERN = re.compile(r'\b(any|all|[0-9]+)\s+of\s+(any|all|[0-9]+)\s+of\b')
+SECTION_REF_PATTERN = re.compile(r'\b([a-zA-Z_][a-zA-Z0-9_]*)\.\$')
+CONSECUTIVE_PARENS_PATTERN = re.compile(r'\)\s+\(')
+QUANTIFIER_WITHOUT_OF_PATTERN = re.compile(r'\b(any|all)\b(?!\s+of\b)')
 
 class NovaParserError(Exception):
     """Exception raised for Nova rule syntax errors."""
@@ -87,7 +99,7 @@ class NovaParser:
     
     def _parse_rule_name(self, line: str) -> str:
         """Extract the rule name from the rule declaration line."""
-        match = re.match(r'rule\s+(\w+)(?:\s*{)?', line)
+        match = RULE_NAME_PATTERN.match(line)
         if not match:
             raise NovaParserError(
                 f"Invalid rule declaration: '{line}'. Must follow format 'rule RuleName' or 'rule RuleName {{'"
@@ -378,7 +390,7 @@ class NovaParser:
         condition = re.sub(r'\s+', ' ', raw_condition).strip()
         
         # Check for improper nesting of quantifiers (e.g., "all of any of")
-        nested_quantifiers = re.finditer(r'\b(any|all|[0-9]+)\s+of\s+(any|all|[0-9]+)\s+of\b', condition)
+        nested_quantifiers = NESTED_QUANTIFIERS_PATTERN.finditer(condition)
         for match in nested_quantifiers:
             pos = match.start()
             context = condition[max(0, pos-20):min(len(condition), pos+20)]
@@ -389,8 +401,7 @@ class NovaParser:
         valid_sections = ['keywords', 'semantics', 'llm']
         
         # Find all potential section references that aren't in our valid list
-        section_pattern = r'\b([a-zA-Z_][a-zA-Z0-9_]*)\.\$'
-        for match in re.finditer(section_pattern, condition):
+        for match in SECTION_REF_PATTERN.finditer(condition):
             section = match.group(1).lower()
             if section not in valid_sections:
                 pos = match.start(1)
@@ -442,7 +453,7 @@ class NovaParser:
                 f"Unclosed parenthesis at position {pos}: '...{context}...'")
         
         # Check that 'any' and 'all' are always followed by 'of'
-        quantifier_matches = list(re.finditer(r'\b(any|all)\b(?!\s+of\b)', condition))
+        quantifier_matches = list(QUANTIFIER_WITHOUT_OF_PATTERN.finditer(condition))
         for match in quantifier_matches:
             pos = match.start()
             quantifier = match.group(1)
@@ -468,7 +479,7 @@ class NovaParser:
         
         # Check for consecutive closing/opening parenthesis patterns without operators
         pattern = r'\)\s+\('
-        matches = re.finditer(pattern, cleaned_condition)
+        matches = CONSECUTIVE_PARENS_PATTERN.finditer(cleaned_condition)
         for match in matches:
             pos = match.start()
             context = condition[max(0, pos-20):min(len(condition), pos+20)]
@@ -754,35 +765,33 @@ class NovaParser:
         # Handle section wildcards and variable wildcards first
         
         # 1. Check section.* patterns (e.g., keywords.*)
-        for section in ['keywords', 'semantics', 'llm']:
-            if f"{section}.*" in working_condition:
-                # This is a valid pattern, remove it from working condition
-                working_condition = working_condition.replace(f"{section}.*", "TRUE")
+        for match in SECTION_WILDCARD_PATTERN.finditer(working_condition):
+            section = match.group(1)
+            # This is a valid pattern, remove it from working condition
+            working_condition = working_condition.replace(f"{section}.*", "TRUE")
         
         # 2. Check section.$prefix* patterns (e.g., semantics.$injection*)
-        for section in ['keywords', 'semantics', 'llm']:
-            pattern = rf'{section}\.\$([a-zA-Z0-9_]+)\*'
-            for match in re.finditer(pattern, condition):
-                prefix = match.group(1)
-                full_match = match.group(0)
-                
-                # Check if any variable starts with this prefix
-                has_match = False
-                for var in self.variable_names[section]:
-                    if var[1:].startswith(prefix):  # Remove $ from var name
-                        has_match = True
-                        break
-                        
-                if not has_match:
-                    raise NovaParserError(
-                        f"Wildcard '{full_match}' in condition doesn't match any defined variables")
-                
-                # Remove this pattern from working condition to avoid overlap
-                working_condition = working_condition.replace(full_match, "TRUE")
+        for match in VAR_PREFIX_PATTERN.finditer(condition):
+            section = match.group(1)
+            prefix = match.group(2)
+            full_match = match.group(0)
+            
+            # Check if any variable starts with this prefix
+            has_match = False
+            for var in self.variable_names[section]:
+                if var[1:].startswith(prefix):  # Remove $ from var name
+                    has_match = True
+                    break
+                    
+            if not has_match:
+                raise NovaParserError(
+                    f"Wildcard '{full_match}' in condition doesn't match any defined variables")
+            
+            # Remove this pattern from working condition to avoid overlap
+            working_condition = working_condition.replace(full_match, "TRUE")
         
         # 3. Handle "any of" wildcards
-        any_of_pattern = r'any\s+of\s+\(\$([a-zA-Z0-9_]+)\*\)'
-        for match in re.finditer(any_of_pattern, condition):
+        for match in ANY_OF_WILDCARD_PATTERN.finditer(condition):
             prefix = match.group(1)
             full_match = match.group(0)
             
@@ -806,8 +815,7 @@ class NovaParser:
         # Now check direct variable references in the simplified condition
         
         # 4. Check section.$var patterns (e.g., semantics.$injection)
-        direct_pattern = r'(keywords|semantics|llm)\.\$([a-zA-Z0-9_]+)'
-        for match in re.finditer(direct_pattern, working_condition):
+        for match in DIRECT_VAR_PATTERN.finditer(working_condition):
             section = match.group(1)
             var_name = f"${match.group(2)}"
             
@@ -820,8 +828,7 @@ class NovaParser:
                     f"Condition references undefined variable '{var_name}' in {section} section")
         
         # 5. Check standalone variables ($var)
-        standalone_pattern = r'(?<![a-zA-Z0-9_\.])(\$[a-zA-Z0-9_]+)'
-        for match in re.finditer(standalone_pattern, working_condition):
+        for match in STANDALONE_VAR_PATTERN.finditer(working_condition):
             var_name = match.group(1)
             
             # Check if the variable exists in any section
@@ -834,7 +841,6 @@ class NovaParser:
             if not found:
                 raise NovaParserError(
                     f"Condition references undefined variable '{var_name}'")
-            
 
 
 class NovaRuleFileParser:
@@ -862,6 +868,7 @@ class NovaRuleFileParser:
             NovaParserError: If there are syntax or validation errors
         """
         try:
+            # Use context manager for efficient file handling
             with open(file_path, 'r') as f:
                 content = f.read()
                 return self.parse_content(content, file_path)
@@ -886,8 +893,8 @@ class NovaRuleFileParser:
         Raises:
             NovaParserError: If there are syntax or validation errors
         """
-        # Extract individual rule blocks
-        rule_blocks = self._extract_rule_blocks(content)
+        # Extract individual rule blocks using the optimized method
+        rule_blocks = self._extract_rule_blocks_optimized(content)
         
         if not rule_blocks:
             raise NovaParserError(f"No valid rules found in {source_name}")
@@ -913,9 +920,10 @@ class NovaRuleFileParser:
         
         return rules
     
-    def _extract_rule_blocks(self, content: str) -> List[str]:
+    def _extract_rule_blocks_optimized(self, content: str) -> List[str]:
         """
-        Extract individual rule blocks from content.
+        Extract individual rule blocks from content using a more efficient approach.
+        This method is optimized for speed over the original implementation.
         
         Args:
             content: String containing multiple rule definitions
@@ -923,84 +931,49 @@ class NovaRuleFileParser:
         Returns:
             List of strings, each containing a single rule
         """
-        # Pattern to find rule declarations
-        rule_start_pattern = r'rule\s+\w+\s*{?'
-        rule_starts = [m.start() for m in re.finditer(rule_start_pattern, content)]
+        # Find all potential rule declarations using our precompiled pattern
+        rule_matches = list(RULE_START_PATTERN.finditer(content))
         
-        if not rule_starts:
+        if not rule_matches:
             return []
         
-        # Extract each rule block
+        # Extract each rule block with a single pass
         rule_blocks = []
         
-        for i in range(len(rule_starts)):
-            start = rule_starts[i]
+        # Process all rule declarations
+        for i, match in enumerate(rule_matches):
+            start_pos = match.start()
             
-            # End is either the start of the next rule or the end of the content
-            end = rule_starts[i+1] if i < len(rule_starts) - 1 else len(content)
+            # Find the end of this rule (either next rule start or EOF)
+            if i < len(rule_matches) - 1:
+                end_pos = rule_matches[i+1].start()
+            else:
+                end_pos = len(content)
             
             # Extract the rule text
-            rule_text = content[start:end].strip()
+            rule_text = content[start_pos:end_pos].strip()
             
-            # Ensure the rule has a closing brace
-            if not self._has_balanced_braces(rule_text):
-                # Try to find where the rule should end
-                possible_end = self._find_rule_end(rule_text)
-                if possible_end > 0:
-                    rule_text = rule_text[:possible_end].strip()
+            # Verify rule completeness (has balanced braces)
+            # We use a faster, single-pass algorithm here
+            brace_count = 0
+            rule_end_pos = -1
             
-            rule_blocks.append(rule_text)
+            for pos, char in enumerate(rule_text):
+                if char == '{':
+                    brace_count += 1
+                elif char == '}':
+                    brace_count -= 1
+                    if brace_count == 0:
+                        # Found complete rule
+                        rule_end_pos = pos + 1
+                        break
+            
+            if rule_end_pos > 0:
+                # If we found a valid end, make sure we only include the complete rule
+                rule_blocks.append(rule_text[:rule_end_pos].strip())
+            else:
+                # If braces aren't balanced, use the whole text up to next rule
+                # This maintains backward compatibility with original behavior
+                rule_blocks.append(rule_text)
         
         return rule_blocks
-    
-    def _has_balanced_braces(self, text: str) -> bool:
-        """
-        Check if a rule block has balanced braces.
-        
-        Args:
-            text: Rule text to check
-            
-        Returns:
-            Boolean indicating if braces are balanced
-        """
-        count = 0
-        
-        for char in text:
-            if char == '{':
-                count += 1
-            elif char == '}':
-                count -= 1
-                
-            # Negative count means too many closing braces
-            if count < 0:
-                return False
-        
-        # All braces should be closed
-        return count == 0
-    
-    def _find_rule_end(self, text: str) -> int:
-        """
-        Find the most likely end position of a rule.
-        
-        Args:
-            text: Rule text to analyze
-            
-        Returns:
-            Index of the closing brace or -1 if not found
-        """
-        # Count opening braces
-        open_count = text.count('{')
-        
-        # Find the matching number of closing braces
-        count = 0
-        for i, char in enumerate(text):
-            if char == '{':
-                count += 1
-            elif char == '}':
-                count -= 1
-                
-                # When count reaches 0, we've found the end of the rule
-                if count == 0:
-                    return i + 1
-        
-        return -1

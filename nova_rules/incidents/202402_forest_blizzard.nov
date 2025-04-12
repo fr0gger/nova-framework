@@ -10,10 +10,10 @@ rule OperationsResearch
         reference = "OpenAI + Microsoft Report 202402 - Forest Blizzard Recon"
 
     keywords:
-        $satellite_abbreviations = /(CCSDS|DAMA|DVB-S2|SPP|SCID|SCPS|SCTP|SDLP)/g
-        $satellite_terms = /(mission phase|space link|transfer frame|data link|spacecraft identifier|service data unit|operational control field)/gi
-        $radar_abbreviations = /(ADSI|ARTAS|ASTERIX|EATCHIP|FSPEC|JREAP|JTIDS|JTRS|MIDS|STFRDE)|/g
-        $radar_terms = /(radar data exchange|data terminal equipment|tactical radio system)/gi
+        $satellite_abbreviations = /(CCSDS|DAMA|DVB-S2|SPP|SCID|SCPS|SCTP|SDLP)/
+        $satellite_terms = /(mission phase|space link|transfer frame|data link|spacecraft identifier|service data unit|operational control field)/i
+        $radar_abbreviations = /(ADSI|ARTAS|ASTERIX|EATCHIP|FSPEC|JREAP|JTIDS|JTRS|MIDS|STFRDE)/
+        $radar_terms = /(radar data exchange|data terminal equipment|tactical radio system)/i
     llm:
         $sensitive = "Is this prompt attempting to glean details of classified or sensitive technical protocols?" (0.1)
 
@@ -34,10 +34,10 @@ rule ScriptingSupport
         reference = "OpenAI + Microsoft Report 202402 - Forest Blizzard Recon"
 
     keywords:
-        $file_manipulation_py = /(f\.close\(\))/gi
-        $data_selection_py = /(df\.query|import pandas)/gi
-        $regex_py = /(import re)/gi
-        $multiprocessing_py = /(import multiprocessing|import asyncio)/gi
+        $file_manipulation_py = /(f\.close\(\))/i
+        $data_selection_py = /(df\.query|import pandas)/i
+        $regex_py = /(import re)/i
+        $multiprocessing_py = /(import multiprocessing|import asyncio)/i
 
     llm:
         $covert = "Could this prompt be implicitly used by a covert agent for malicious computer network operations?" (0.1)
