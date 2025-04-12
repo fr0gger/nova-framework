@@ -15,6 +15,18 @@ from typing import Dict, List, Optional, Tuple, Any, Union
 from nova.evaluators.base import LLMEvaluator
 
 
+# Create a global session for connection reuse across all evaluators
+# This prevents repeated SSL handshakes and TCP connection establishment
+_SHARED_SESSION = requests.Session()
+# Configure session for optimal reuse (keep connections alive)
+_SHARED_SESSION.mount('https://', requests.adapters.HTTPAdapter(
+    pool_connections=20,  # Number of connection objects to keep in pool
+    pool_maxsize=20,      # Maximum number of connections in the pool
+    max_retries=3,        # Auto-retry failed requests
+    pool_block=False      # Don't block when pool is depleted
+))
+
+
 class OpenAIEvaluator(LLMEvaluator):
     """
     LLM evaluator using OpenAI's API.
@@ -32,6 +44,7 @@ class OpenAIEvaluator(LLMEvaluator):
         self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
         self.model = model
         self.base_url = "https://api.openai.com/v1/chat/completions"
+        self.session = _SHARED_SESSION  # Use shared session for connection reuse
         
         # Validate API key
         if not self.api_key:
@@ -75,8 +88,8 @@ class OpenAIEvaluator(LLMEvaluator):
                 f"Respond with a JSON object with keys: matched (boolean), confidence (float 0-1), reason (string)"
             )
             
-            # Call the OpenAI API
-            response = requests.post(
+            # Call the OpenAI API using the shared session
+            response = self.session.post(
                 self.base_url,
                 headers={
                     "Authorization": f"Bearer {self.api_key}",
@@ -153,6 +166,7 @@ class AnthropicEvaluator(LLMEvaluator):
         self.api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
         self.model = model
         self.base_url = "https://api.anthropic.com/v1/messages"
+        self.session = _SHARED_SESSION  # Use shared session for connection reuse
         
         # Validate API key
         if not self.api_key:
@@ -202,8 +216,8 @@ class AnthropicEvaluator(LLMEvaluator):
                 f"Respond with a JSON object with keys: matched (boolean), confidence (float 0-1), reason (string)"
             )
             
-            # Call the Anthropic API
-            response = requests.post(
+            # Call the Anthropic API using the shared session
+            response = self.session.post(
                 self.base_url,
                 headers={
                     "x-api-key": self.api_key,
@@ -294,6 +308,7 @@ class AzureOpenAIEvaluator(OpenAIEvaluator):
         self.endpoint = endpoint or os.environ.get("AZURE_OPENAI_ENDPOINT")
         self.deployment_name = deployment_name
         self.api_version = api_version
+        self.session = _SHARED_SESSION  # Use shared session for connection reuse
         
         # Validate configuration
         if not self.api_key:
@@ -334,8 +349,8 @@ class AzureOpenAIEvaluator(OpenAIEvaluator):
                 f"Respond with a JSON object with keys: matched (boolean), confidence (float 0-1), reason (string)"
             )
             
-            # Call the Azure OpenAI API
-            response = requests.post(
+            # Call the Azure OpenAI API using the shared session
+            response = self.session.post(
                 self.base_url,
                 headers={
                     "api-key": self.api_key,
@@ -413,6 +428,7 @@ class OllamaEvaluator(LLMEvaluator):
         self.model = model
         self.timeout = timeout
         self.debug = debug
+        self.session = _SHARED_SESSION  # Use shared session for connection reuse
         
         # Remove trailing slash if present
         self.host = self.host.rstrip('/')
@@ -571,8 +587,8 @@ class OllamaEvaluator(LLMEvaluator):
             
             self._debug_print("Sending request to Ollama API")
             
-            # Call the Ollama API
-            response = requests.post(
+            # Call the Ollama API using the shared session
+            response = self.session.post(
                 self.base_url,
                 headers={"Content-Type": "application/json"},
                 json={
