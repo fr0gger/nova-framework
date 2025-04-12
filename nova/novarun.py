@@ -439,10 +439,13 @@ def main():
     
     parser.add_argument('-v', '--verbose', action='store_true', help='Enable verbose output')
     parser.add_argument('-c', '--config', help='Path to Nova configuration file')
-    parser.add_argument('-a', '--all', action='store_true', help='Check against all rules in the file')
+    parser.add_argument('-s', '--single', action='store_true', help='Check against only the first rule in the file (default reads all rules)')
     parser.add_argument('-l', '--llm', choices=['openai', 'anthropic', 'azure', 'ollama'], 
                        default='openai', help='LLM evaluator to use')
     parser.add_argument('-m', '--model', help='Specific model to use with the LLM evaluator')
+    
+    # Keep the -a/--all flag for backward compatibility, but make it a no-op (all rules is now default)
+    parser.add_argument('-a', '--all', action='store_true', help='Check against all rules in the file (default behavior)')
     
     args = parser.parse_args()
     
@@ -469,7 +472,7 @@ def main():
         print(f"\n{Fore.CYAN}Loaded {Fore.WHITE}{len(prompts)}{Fore.CYAN} prompts from {Fore.WHITE}{args.file}")
     
     # Check if the file might contain multiple rules
-    if args.all and 'rule ' in file_content.lower() and file_content.count('rule ') > 1:
+    if not args.single and 'rule ' in file_content.lower() and file_content.count('rule ') > 1:
         # Extract all rules from the file
         rule_blocks = extract_rules(file_content)
         
