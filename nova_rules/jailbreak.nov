@@ -47,7 +47,7 @@ rule PromptInjectionJailbreak
         $return_harmful = "return harmful content"
     
     condition:
-        3 of keywords.*
+        any of keywords.*
 }
 
 rule TokenSmugglingJailbreak

@@ -7,7 +7,7 @@ Version: 1.0.0
 Description: Core matcher implementation for Nova rules
 """
 
-from typing import Dict, List, Tuple, Optional, Any
+from typing import Dict, List, Tuple, Optional, Any, Set, Callable
 import re
 
 from nova.core.rules import NovaRule, KeywordPattern, SemanticPattern, LLMPattern
@@ -52,7 +52,81 @@ class NovaMatcher:
         for key, pattern in self.rule.keywords.items():
             if pattern.is_regex:
                 self.keyword_evaluator.compile_pattern(key, pattern)
-    
+
+    def _analyze_condition(self, condition: str) -> Dict[str, Set[str]]:
+        """
+        Analyze the rule condition to determine which patterns need to be evaluated.
+        
+        Args:
+            condition: The rule condition
+            
+        Returns:
+            Dictionary with sets of variable names needed for each pattern type
+        """
+        needed_patterns = {
+            'keywords': set(),
+            'semantics': set(),
+            'llm': set(),
+            'section_wildcards': set()
+        }
+        
+        # Check for section wildcards
+        for section in ['keywords', 'semantics', 'llm']:
+            if f"{section}.*" in condition:
+                needed_patterns['section_wildcards'].add(section)
+                
+        # Check for "any of" section wildcards
+        for section in ['keywords', 'semantics', 'llm']:
+            if f"any of {section}.*" in condition:
+                needed_patterns['section_wildcards'].add(section)
+
+        # Check for direct variable references with section prefixes
+        for section in ['keywords', 'semantics', 'llm']:
+            # Exact references: "section.$var"
+            pattern = rf'{section}\.\$([a-zA-Z0-9_]+)(?!\*)'
+            for match in re.finditer(pattern, condition):
+                var_name = f"${match.group(1)}"
+                needed_patterns[section].add(var_name)
+                
+            # Wildcard references: "section.$var*"
+            wildcard_pattern = rf'{section}\.\$([a-zA-Z0-9_]+)\*'
+            for match in re.finditer(wildcard_pattern, condition):
+                prefix = match.group(1)
+                # Add all matching variables to needed patterns
+                for var_name in getattr(self.rule, section, {}):
+                    if var_name[1:].startswith(prefix):  # Remove $ from var name
+                        needed_patterns[section].add(var_name)
+        
+        # Check for standalone variables ($var)
+        var_pattern = r'(?<![a-zA-Z0-9_\.])(\$[a-zA-Z0-9_]+)(?!\*)'
+        for match in re.finditer(var_pattern, condition):
+            var_name = match.group(1)
+            
+            # Determine which section this variable belongs to
+            if var_name in self.rule.keywords:
+                needed_patterns['keywords'].add(var_name)
+            elif var_name in self.rule.semantics:
+                needed_patterns['semantics'].add(var_name)
+            elif var_name in self.rule.llms:
+                needed_patterns['llm'].add(var_name)
+        
+        # Check for "any of" wildcards
+        any_of_pattern = r'any\s+of\s+\(\$([a-zA-Z0-9_]+)\*\)'
+        for match in re.finditer(any_of_pattern, condition):
+            prefix = match.group(1)
+            
+            # Add all matching variables from all sections
+            for section, patterns in [
+                ('keywords', self.rule.keywords),
+                ('semantics', self.rule.semantics),
+                ('llm', self.rule.llms)
+            ]:
+                for var_name in patterns:
+                    if var_name[1:].startswith(prefix):
+                        needed_patterns[section].add(var_name)
+        
+        return needed_patterns
+        
     def check_prompt(self, prompt: str) -> Dict[str, Any]:
         """
         Check if a prompt matches the rule.
@@ -63,110 +137,140 @@ class NovaMatcher:
         Returns:
             Dictionary containing match results and details
         """
-        # Get all keyword matches for debugging
-        all_keyword_matches = {}
-        for key, pattern in self.rule.keywords.items():
-            all_keyword_matches[key] = self.keyword_evaluator.evaluate(pattern, prompt, key)
+        # Extract variables needed based on the condition
+        condition = self.rule.condition
+        needed_patterns = self._analyze_condition(condition)
         
-        # Get all semantic matches for debugging
+        # Track all evaluation results for debugging
+        all_keyword_matches = {}
         all_semantic_matches = {}
         all_semantic_scores = {}
-        for key, pattern in self.rule.semantics.items():
-            matched, score = self.semantic_evaluator.evaluate(pattern, prompt)
-            all_semantic_matches[key] = matched
-            all_semantic_scores[key] = score
-        
-        # Get all LLM matches for debugging
         all_llm_matches = {}
         all_llm_scores = {}
-        for key, pattern in self.rule.llms.items():
-            # Use the pattern's threshold as the temperature parameter
-            temperature = pattern.threshold
-            matched, confidence, details = self.llm_evaluator.evaluate_prompt(pattern.pattern, prompt, temperature=temperature)
-            all_llm_matches[key] = matched  # Don't compare confidence to threshold anymore
-            all_llm_scores[key] = confidence
         
-        # For the condition evaluation, only use variables explicitly referenced
-        condition = self.rule.condition
+        # Dictionary to hold evaluation functions for lazy evaluation
+        lazy_evaluations = {}
         
-        # Extract variables directly referenced in the condition
+        # Initialize filtered dictionaries to hold results needed for condition evaluation
         keyword_matches = {}
         semantic_matches = {}
         llm_matches = {}
         
-        # Check for direct variable references with wildcards (section.$var*)
-        for section, var_dict, target_dict in [
-            ('keywords', all_keyword_matches, keyword_matches),
-            ('semantics', all_semantic_matches, semantic_matches),
-            ('llm', all_llm_matches, llm_matches)
+        # ------ LAZY PATTERN EVALUATION ------
+        
+        # Set up lazy evaluation functions for keywords
+        for key, pattern in self.rule.keywords.items():
+            # Only include if explicitly needed by condition or section wildcard is used
+            if key in needed_patterns['keywords'] or 'keywords' in needed_patterns['section_wildcards']:
+                lazy_evaluations[('keywords', key)] = lambda p=pattern, k=key: self.keyword_evaluator.evaluate(p, prompt, k)
+        
+        # Set up lazy evaluation functions for semantics
+        for key, pattern in self.rule.semantics.items():
+            # Only include if explicitly needed by condition or section wildcard is used
+            if key in needed_patterns['semantics'] or 'semantics' in needed_patterns['section_wildcards']:
+                lazy_evaluations[('semantics', key)] = lambda p=pattern: self.semantic_evaluator.evaluate(p, prompt)
+        
+        # Set up lazy evaluation functions for LLMs
+        for key, pattern in self.rule.llms.items():
+            # Only include if explicitly needed by condition or section wildcard is used
+            if key in needed_patterns['llm'] or 'llm' in needed_patterns['section_wildcards']:
+                temperature = pattern.threshold
+                lazy_evaluations[('llm', key)] = lambda p=pattern, t=temperature: self.llm_evaluator.evaluate_prompt(p.pattern, prompt, temperature=t)
+        
+        # First evaluate only the patterns that are directly referenced in the condition
+        # (We'll do the wildcard evaluations on demand during condition evaluation)
+        for section, var_name in [
+            ('keywords', name) for name in needed_patterns['keywords']
+        ] + [
+            ('semantics', name) for name in needed_patterns['semantics']
+        ] + [
+            ('llm', name) for name in needed_patterns['llm']
         ]:
-            # Match exact references like "section.$var"
-            pattern = rf'{section}\.\$([a-zA-Z0-9_]+)(?!\*)'
-            for match in re.finditer(pattern, condition):
-                var_name = f"${match.group(1)}"
-                if var_name in var_dict:
-                    target_dict[var_name] = var_dict[var_name]
-                    
-            # Match wildcard references like "section.$var*"
-            wildcard_pattern = rf'{section}\.\$([a-zA-Z0-9_]+)\*'
-            for match in re.finditer(wildcard_pattern, condition):
-                prefix = match.group(1)
-                # Add all variables matching this prefix
-                for var, value in var_dict.items():
-                    if var[1:].startswith(prefix):  # Remove $ from var name
-                        target_dict[var] = value
+            eval_key = (section, var_name)
+            if eval_key in lazy_evaluations:
+                try:
+                    if section == 'keywords':
+                        result = lazy_evaluations[eval_key]()
+                        all_keyword_matches[var_name] = result
+                        keyword_matches[var_name] = result
+                    elif section == 'semantics':
+                        matched, score = lazy_evaluations[eval_key]()
+                        all_semantic_matches[var_name] = matched
+                        all_semantic_scores[var_name] = score
+                        semantic_matches[var_name] = matched
+                    elif section == 'llm':
+                        matched, confidence, details = lazy_evaluations[eval_key]()
+                        all_llm_matches[var_name] = matched
+                        all_llm_scores[var_name] = confidence
+                        llm_matches[var_name] = matched
+                except Exception as e:
+                    print(f"Error evaluating {section}.{var_name}: {str(e)}")
+                    # Default to False on error
+                    if section == 'keywords':
+                        all_keyword_matches[var_name] = False
+                        keyword_matches[var_name] = False
+                    elif section == 'semantics':
+                        all_semantic_matches[var_name] = False
+                        all_semantic_scores[var_name] = 0.0
+                        semantic_matches[var_name] = False
+                    elif section == 'llm':
+                        all_llm_matches[var_name] = False
+                        all_llm_scores[var_name] = 0.0
+                        llm_matches[var_name] = False
         
-        # Check for standalone variables ($var)
-        var_pattern = r'(?<![a-zA-Z0-9_\.])(\$[a-zA-Z0-9_]+)(?!\*)'
-        for match in re.finditer(var_pattern, condition):
-            var_name = match.group(1)
+        # Process section wildcards if needed
+        for section in needed_patterns['section_wildcards']:
+            if section == 'keywords' and not all_keyword_matches:
+                # Only evaluate all keywords if needed and not already evaluated
+                for key, pattern in self.rule.keywords.items():
+                    if key not in all_keyword_matches:
+                        try:
+                            result = self.keyword_evaluator.evaluate(pattern, prompt, key)
+                            all_keyword_matches[key] = result
+                        except Exception:
+                            all_keyword_matches[key] = False
             
-            # Skip if it's already handled as a section.$ reference
-            if any(var_name in d for d in [keyword_matches, semantic_matches, llm_matches]):
-                continue
-                
-            # Try to find where this variable is defined
-            if var_name in all_keyword_matches:
-                keyword_matches[var_name] = all_keyword_matches[var_name]
-            elif var_name in all_semantic_matches:
-                semantic_matches[var_name] = all_semantic_matches[var_name]
-            elif var_name in all_llm_matches:
-                llm_matches[var_name] = all_llm_matches[var_name]
-        
-        # Handle "any of" wildcards if present
-        any_of_pattern = r'any\s+of\s+\(\$([a-zA-Z0-9_]+)\*\)'
-        for match in re.finditer(any_of_pattern, condition):
-            prefix = match.group(1)
+            elif section == 'semantics' and not all_semantic_matches:
+                # Only evaluate all semantics if needed and not already evaluated
+                for key, pattern in self.rule.semantics.items():
+                    if key not in all_semantic_matches:
+                        try:
+                            matched, score = self.semantic_evaluator.evaluate(pattern, prompt)
+                            all_semantic_matches[key] = matched
+                            all_semantic_scores[key] = score
+                        except Exception:
+                            all_semantic_matches[key] = False
+                            all_semantic_scores[key] = 0.0
             
-            # Add variables matching this prefix from all sections
-            for var, value in all_keyword_matches.items():
-                if var[1:].startswith(prefix):  # Remove $ from var name
-                    keyword_matches[var] = value
-                    
-            for var, value in all_semantic_matches.items():
-                if var[1:].startswith(prefix):
-                    semantic_matches[var] = value
-                    
-            for var, value in all_llm_matches.items():
-                if var[1:].startswith(prefix):
-                    llm_matches[var] = value
-        
-        # Process section wildcards (keywords.*, semantics.*, llm.*)
-        if "keywords.*" in condition:
-            keyword_matches.update(all_keyword_matches)
-        if "semantics.*" in condition:
-            semantic_matches.update(all_semantic_matches)
-        if "llm.*" in condition:
-            llm_matches.update(all_llm_matches)
+            elif section == 'llm' and not all_llm_matches:
+                # Only evaluate all LLM patterns if needed and not already evaluated
+                for key, pattern in self.rule.llms.items():
+                    if key not in all_llm_matches:
+                        try:
+                            temperature = pattern.threshold
+                            matched, confidence, details = self.llm_evaluator.evaluate_prompt(pattern.pattern, prompt, temperature=temperature)
+                            all_llm_matches[key] = matched
+                            all_llm_scores[key] = confidence
+                        except Exception:
+                            all_llm_matches[key] = False
+                            all_llm_scores[key] = 0.0
         
         # Evaluate condition if provided
         has_match = False
         condition_result = None
         
-        if self.rule.condition:
+        if condition:
+            # Make sure eval_condition gets all variables that might be needed by wildcards
+            if 'keywords' in needed_patterns['section_wildcards']:
+                keyword_matches.update(all_keyword_matches)
+            if 'semantics' in needed_patterns['section_wildcards']:
+                semantic_matches.update(all_semantic_matches)
+            if 'llm' in needed_patterns['section_wildcards']:
+                llm_matches.update(all_llm_matches)
+                
             # Use the condition evaluator with filtered match types
             condition_result = evaluate_condition(
-                self.rule.condition, 
+                condition, 
                 keyword_matches, 
                 semantic_matches, 
                 llm_matches
@@ -187,7 +291,7 @@ class NovaMatcher:
             'semantic_scores': all_semantic_scores,
             'llm_scores': all_llm_scores,
             'debug': {
-                'condition': self.rule.condition,
+                'condition': condition,
                 'condition_result': condition_result,
                 'all_keyword_matches': all_keyword_matches,
                 'all_semantic_matches': all_semantic_matches,
