@@ -8,6 +8,22 @@ Version: 1.0.0
 Description: Command-line tool for running Nova rules against prompts
 """
 
+# Filter out the specific FutureWarning about clean_up_tokenization_spaces
+import warnings
+warnings.filterwarnings("ignore", message=".*clean_up_tokenization_spaces.*")
+
+# Set transformers tokenization settings at the very beginning
+# This must be before any imports to prevent FutureWarning
+try:
+    import transformers
+    # Explicitly set the tokenization spaces parameter to prevent FutureWarning
+    if hasattr(transformers, 'tokenization_utils_base'):
+        transformers.tokenization_utils_base.CLEAN_UP_TOKENIZATION_SPACES = True
+    if hasattr(transformers, 'PreTrainedTokenizerBase'):
+        transformers.PreTrainedTokenizerBase.clean_up_tokenization_spaces = True
+except ImportError:
+    pass
+
 import os
 import sys
 import argparse

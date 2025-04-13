@@ -9,6 +9,19 @@ Description: Main Nova framework package initialization
 
 __version__ = "1.0.0"
 
+# Set the clean_up_tokenization_spaces parameter globally to avoid FutureWarning
+import warnings
+try:
+    import transformers
+    # Suppress the FutureWarning about clean_up_tokenization_spaces
+    if hasattr(transformers, 'tokenization_utils_base'):
+        transformers.tokenization_utils_base.CLEAN_UP_TOKENIZATION_SPACES = True
+    # Also set the parameter in the PreTrainedTokenizerBase class
+    if hasattr(transformers, 'PreTrainedTokenizerBase'):
+        transformers.PreTrainedTokenizerBase.clean_up_tokenization_spaces = True
+except ImportError:
+    warnings.warn("Transformers library not found. Some features may not be available.")
+
 from nova.core.rules import (
     KeywordPattern,
     SemanticPattern,
