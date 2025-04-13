@@ -1,10 +1,18 @@
-# Nova Hunting v0.1.2 Release Notes
+# Nova Hunting v0.1.4 Release Notes
 
-## Package Rename
+## Version Update
+- **Updated**: Version from 0.1.3 to 0.1.4
+
+## Bug Fixes
+- **Fixed**: Warning about `clean_up_tokenization_spaces` from transformers library
+- **Added**: Warning filter to suppress FutureWarning messages related to tokenization spaces
+- **Modified**: Multiple files to set tokenization parameters correctly
+
+## Previous Features (v0.1.2)
+
+### Package Rename
 - **Changed**: Package renamed from nova-framework to nova-hunting
 - **Updated**: Version to 0.1.2
-
-## Major Features
 
 ### Performance Optimizations
 - LLM evaluator sharing across rules in NovaScanner class
