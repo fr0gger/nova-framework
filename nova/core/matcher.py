@@ -13,7 +13,7 @@ import re
 from nova.core.rules import NovaRule, KeywordPattern, SemanticPattern, LLMPattern
 from nova.evaluators.keywords import DefaultKeywordEvaluator
 from nova.evaluators.semantics import DefaultSemanticEvaluator
-from nova.evaluators.llm import OpenAIEvaluator
+from nova.evaluators.llm import OpenAIEvaluator, LLMEvaluator
 from nova.evaluators.condition import evaluate_condition
 
 
@@ -21,38 +21,91 @@ class NovaMatcher:
     """
     Matcher for Nova rules.
     Evaluates text against rules using different pattern types.
+    Uses lazy evaluator initialization for better performance.
     """
     
     def __init__(self, 
                  rule: NovaRule,
                  keyword_evaluator: Optional[DefaultKeywordEvaluator] = None,
                  semantic_evaluator: Optional[DefaultSemanticEvaluator] = None,
-                 llm_evaluator: Optional[OpenAIEvaluator] = None):
+                 llm_evaluator: Optional[LLMEvaluator] = None,
+                 create_llm_evaluator: bool = True):
         """
         Initialize the matcher with a rule and optional custom evaluators.
+        Only initializes evaluators when needed based on rule content.
         
         Args:
             rule: The NovaRule to match against
             keyword_evaluator: Custom keyword evaluator (uses DefaultKeywordEvaluator if None)
             semantic_evaluator: Custom semantic evaluator (uses DefaultSemanticEvaluator if None)
             llm_evaluator: Custom LLM evaluator (uses OpenAIEvaluator if None)
+            create_llm_evaluator: Whether to create a new LLM evaluator if needed and none is provided.
+                                  If False, and llm_evaluator is None, no LLM evaluations will be performed.
         """
         self.rule = rule
         
-        # Initialize evaluators
+        # Always initialize keyword evaluator since it's lightweight
         self.keyword_evaluator = keyword_evaluator or DefaultKeywordEvaluator()
-        self.semantic_evaluator = semantic_evaluator or DefaultSemanticEvaluator()
-        self.llm_evaluator = llm_evaluator or OpenAIEvaluator()
+        
+        # Check if semantic evaluator is needed
+        needs_semantic = False
+        if rule and rule.semantics:
+            needs_semantic = True
+        elif rule and 'semantics' in rule.condition.lower():
+            needs_semantic = True
+            
+        # Check if LLM evaluator is needed
+        needs_llm = False
+        if rule and rule.llms:
+            needs_llm = True
+        elif rule and 'llm.' in rule.condition.lower():
+            needs_llm = True
+        
+        # Only initialize semantic evaluator if needed
+        if needs_semantic:
+            self.semantic_evaluator = semantic_evaluator or DefaultSemanticEvaluator()
+        else:
+            self.semantic_evaluator = None
+            
+        # Handle LLM evaluator initialization
+        if llm_evaluator:
+            # Use provided evaluator regardless of need
+            self.llm_evaluator = llm_evaluator
+        elif needs_llm and create_llm_evaluator:
+            # Create a new evaluator if needed and allowed to create
+            self.llm_evaluator = OpenAIEvaluator()
+        else:
+            # No evaluator provided and either not needed or not allowed to create
+            self.llm_evaluator = None
+            if needs_llm:
+                print("Warning: Rule requires LLM evaluation but no evaluator provided and creation disabled.")
+            else:
+                print("Rule does not use LLM evaluation. Skipping LLM evaluator initialization.")
         
         # Pre-compile keyword patterns for performance
-        self._precompile_patterns()
-    
+        if rule:
+            self._precompile_patterns()
+
     def _precompile_patterns(self):
         """Pre-compile regex patterns for better performance."""
+        if not self.rule:
+            return
+            
         for key, pattern in self.rule.keywords.items():
             if pattern.is_regex:
                 self.keyword_evaluator.compile_pattern(key, pattern)
 
+    def set_rule(self, rule: NovaRule):
+        """
+        Update the matcher with a new rule.
+        This is more efficient than creating a new matcher instance.
+        
+        Args:
+            rule: The new NovaRule to match against
+        """
+        self.rule = rule
+        self._precompile_patterns()
+    
     def _analyze_condition(self, condition: str) -> Dict[str, Set[str]]:
         """
         Analyze the rule condition to determine which patterns need to be evaluated.
@@ -164,28 +217,33 @@ class NovaMatcher:
             if key in needed_patterns['keywords'] or 'keywords' in needed_patterns['section_wildcards']:
                 lazy_evaluations[('keywords', key)] = lambda p=pattern, k=key: self.keyword_evaluator.evaluate(p, prompt, k)
         
-        # Set up lazy evaluation functions for semantics
-        for key, pattern in self.rule.semantics.items():
-            # Only include if explicitly needed by condition or section wildcard is used
-            if key in needed_patterns['semantics'] or 'semantics' in needed_patterns['section_wildcards']:
-                lazy_evaluations[('semantics', key)] = lambda p=pattern: self.semantic_evaluator.evaluate(p, prompt)
+        # Set up lazy evaluation functions for semantics (if evaluator exists)
+        if self.semantic_evaluator:
+            for key, pattern in self.rule.semantics.items():
+                # Only include if explicitly needed by condition or section wildcard is used
+                if key in needed_patterns['semantics'] or 'semantics' in needed_patterns['section_wildcards']:
+                    lazy_evaluations[('semantics', key)] = lambda p=pattern: self.semantic_evaluator.evaluate(p, prompt)
         
-        # Set up lazy evaluation functions for LLMs
-        for key, pattern in self.rule.llms.items():
-            # Only include if explicitly needed by condition or section wildcard is used
-            if key in needed_patterns['llm'] or 'llm' in needed_patterns['section_wildcards']:
-                temperature = pattern.threshold
-                lazy_evaluations[('llm', key)] = lambda p=pattern, t=temperature: self.llm_evaluator.evaluate_prompt(p.pattern, prompt, temperature=t)
+        # Set up lazy evaluation functions for LLMs (if evaluator exists)
+        if self.llm_evaluator:
+            for key, pattern in self.rule.llms.items():
+                # Only include if explicitly needed by condition or section wildcard is used
+                if key in needed_patterns['llm'] or 'llm' in needed_patterns['section_wildcards']:
+                    temperature = pattern.threshold
+                    lazy_evaluations[('llm', key)] = lambda p=pattern, t=temperature: self.llm_evaluator.evaluate_prompt(p.pattern, prompt, temperature=t)
         
         # First evaluate only the patterns that are directly referenced in the condition
-        # (We'll do the wildcard evaluations on demand during condition evaluation)
-        for section, var_name in [
-            ('keywords', name) for name in needed_patterns['keywords']
-        ] + [
-            ('semantics', name) for name in needed_patterns['semantics']
-        ] + [
-            ('llm', name) for name in needed_patterns['llm']
-        ]:
+        # Create a list of sections and variables to evaluate based on what evaluators are available
+        patterns_to_evaluate = [('keywords', name) for name in needed_patterns['keywords']]
+        
+        if self.semantic_evaluator:
+            patterns_to_evaluate += [('semantics', name) for name in needed_patterns['semantics']]
+            
+        if self.llm_evaluator:
+            patterns_to_evaluate += [('llm', name) for name in needed_patterns['llm']]
+            
+        # Evaluate each pattern
+        for section, var_name in patterns_to_evaluate:
             eval_key = (section, var_name)
             if eval_key in lazy_evaluations:
                 try:
@@ -230,7 +288,7 @@ class NovaMatcher:
                         except Exception:
                             all_keyword_matches[key] = False
             
-            elif section == 'semantics' and not all_semantic_matches:
+            elif section == 'semantics' and self.semantic_evaluator and not all_semantic_matches:
                 # Only evaluate all semantics if needed and not already evaluated
                 for key, pattern in self.rule.semantics.items():
                     if key not in all_semantic_matches:
@@ -242,7 +300,7 @@ class NovaMatcher:
                             all_semantic_matches[key] = False
                             all_semantic_scores[key] = 0.0
             
-            elif section == 'llm' and not all_llm_matches:
+            elif section == 'llm' and self.llm_evaluator and not all_llm_matches:
                 # Only evaluate all LLM patterns if needed and not already evaluated
                 for key, pattern in self.rule.llms.items():
                     if key not in all_llm_matches:
@@ -263,9 +321,9 @@ class NovaMatcher:
             # Make sure eval_condition gets all variables that might be needed by wildcards
             if 'keywords' in needed_patterns['section_wildcards']:
                 keyword_matches.update(all_keyword_matches)
-            if 'semantics' in needed_patterns['section_wildcards']:
+            if 'semantics' in needed_patterns['section_wildcards'] and self.semantic_evaluator:
                 semantic_matches.update(all_semantic_matches)
-            if 'llm' in needed_patterns['section_wildcards']:
+            if 'llm' in needed_patterns['section_wildcards'] and self.llm_evaluator:
                 llm_matches.update(all_llm_matches)
                 
             # Use the condition evaluator with filtered match types

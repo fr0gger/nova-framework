@@ -324,7 +324,7 @@ def run_simplified_tests(verbose=False):
         keywords:
             $email = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/
             $phone = /\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/
-            $ip = /\b(?:\d{1,3}\.){3}\d{1,3}\b/
+            $ip = /(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/
         
         condition:
             keywords.$email or keywords.$phone or keywords.$ip

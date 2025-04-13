@@ -265,6 +265,30 @@ class NovaErrorTests:
                           True, 
                           f"Parser correctly rejected invalid regex: {str(e)}")
             
+        # Add another test case with a more clearly invalid regex
+        clearly_invalid_regex = """
+        rule ClearlyInvalidRegexRule
+        {
+            meta:
+                description = "Test rule with obviously invalid regex"
+                
+            keywords:
+                $a = /[unclosed bracket/
+                
+            condition:
+                $a
+        }
+        """
+        try:
+            self.parser.parse(clearly_invalid_regex)
+            self._log_test("Clearly Invalid Regex Handling", 
+                          False, 
+                          "Parser should have rejected clearly invalid regex")
+        except Exception as e:
+            self._log_test("Clearly Invalid Regex Handling", 
+                          True, 
+                          f"Parser correctly rejected clearly invalid regex: {str(e)}")
+            
     def _test_condition_evaluator_errors(self):
         """Test condition evaluator error handling."""
         print("\nTesting Condition Evaluator Error Handling:")

@@ -10,6 +10,7 @@ Description: Scanner for checking prompts against multiple Nova rules
 from typing import List, Dict, Any, Optional
 from nova.core.matcher import NovaMatcher
 from nova.core.rules import NovaRule
+from nova.evaluators.llm import OpenAIEvaluator, LLMEvaluator
 
 class NovaScanner:
     """
@@ -25,10 +26,45 @@ class NovaScanner:
         """
         self.rules = rules or []
         self._matchers = {}
+        self._llm_evaluator = None
         
+        # Check if any rules need LLM evaluation and create a single shared evaluator if needed
+        if self.rules:
+            self._initialize_evaluators()
+            
         # Initialize matchers for provided rules
         for rule in self.rules:
-            self._matchers[rule.name] = NovaMatcher(rule)
+            self._create_matcher(rule)
+    
+    def _initialize_evaluators(self):
+        """Initialize evaluators based on rule needs."""
+        # Check if any rule needs LLM evaluation
+        needs_llm = any(self._rule_needs_llm(rule) for rule in self.rules)
+        
+        # Create LLM evaluator only if needed
+        if needs_llm:
+            print("Creating single shared LLM evaluator for all rules...")
+            self._llm_evaluator = OpenAIEvaluator()
+    
+    def _rule_needs_llm(self, rule: NovaRule) -> bool:
+        """Check if a rule requires LLM evaluation."""
+        if rule.llms:
+            return True
+        if rule.condition and 'llm.' in rule.condition.lower():
+            return True
+        return False
+    
+    def _create_matcher(self, rule: NovaRule) -> NovaMatcher:
+        """Create a matcher for a rule, with shared evaluators."""
+        # Create matcher with shared LLM evaluator if one exists
+        matcher = NovaMatcher(
+            rule=rule,
+            llm_evaluator=self._llm_evaluator,
+            # Don't create a new LLM evaluator if we didn't create one already
+            create_llm_evaluator=self._llm_evaluator is None
+        )
+        self._matchers[rule.name] = matcher
+        return matcher
     
     def add_rule(self, rule: NovaRule) -> None:
         """
@@ -43,8 +79,13 @@ class NovaScanner:
         if rule.name in self._matchers:
             raise ValueError(f"Rule with name '{rule.name}' already exists")
             
+        # Check if we need to create LLM evaluator (if we don't already have one)
+        if self._llm_evaluator is None and self._rule_needs_llm(rule):
+            print("Creating LLM evaluator for newly added rule that requires it...")
+            self._llm_evaluator = OpenAIEvaluator()
+        
         self.rules.append(rule)
-        self._matchers[rule.name] = NovaMatcher(rule)
+        self._create_matcher(rule)
     
     def add_rules(self, rules: List[NovaRule]) -> None:
         """
@@ -56,8 +97,17 @@ class NovaScanner:
         Raises:
             ValueError: If any rule has a duplicate name
         """
+        # Check if any of the new rules need LLM (if we don't already have one)
+        if self._llm_evaluator is None and any(self._rule_needs_llm(rule) for rule in rules):
+            print("Creating LLM evaluator for newly added rules that require it...")
+            self._llm_evaluator = OpenAIEvaluator()
+        
         for rule in rules:
-            self.add_rule(rule)
+            if rule.name in self._matchers:
+                raise ValueError(f"Rule with name '{rule.name}' already exists")
+            
+            self.rules.append(rule)
+            self._create_matcher(rule)
     
     def scan(self, prompt: str) -> List[Dict[str, Any]]:
         """
@@ -129,3 +179,5 @@ class NovaScanner:
         """Clear all loaded rules."""
         self.rules = []
         self._matchers = {}
+        # Also clear the LLM evaluator since we don't need it anymore
+        self._llm_evaluator = None

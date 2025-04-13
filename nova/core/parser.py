@@ -289,27 +289,22 @@ class NovaParser:
     def _parse_keywords_section(self, content: List[str]) -> Dict[str, KeywordPattern]:
         """Parse keyword patterns from the keywords section."""
         result = {}
-        line_num = 0
-        seen_variables = set()  # Track variables we've already seen
+        seen_variables = set()
         
-        for line in content:
-            line_num += 1
-            line = line.strip()
-            if not line or line.startswith('//'):
+        for line_num, line in enumerate(content):
+            # Skip empty lines and comments
+            if not line or line.strip().startswith('#'):
                 continue
             
-            # Check for equals sign
-            if '=' not in line:
-                # Extract variable name for better error message
-                parts = line.split()
-                var_name = parts[0] if parts else "unknown"
+            # Split the line into variable and pattern
+            try:
+                key, value = map(str.strip, line.split('=', 1))
+            except ValueError:
+                # Line doesn't contain an equals sign
                 raise NovaParserError(
-                    f"Missing equals sign at line {line_num}: '{line}'. Format should be '$variable = \"pattern\"'")
+                    f"Invalid keyword pattern at line {line_num}: '{line}'. Patterns must be in the format '$var = \"pattern\"'")
             
-            key, value = line.split('=', 1)
-            key = key.strip()
-            
-            # Check that variable name starts with $
+            # Check for "$var" format
             if not key.startswith('$'):
                 raise NovaParserError(
                     f"Invalid keyword variable at line {line_num}: '{key}'. Variable names must start with $")
@@ -339,29 +334,32 @@ class NovaParser:
                     
                 # Check if there's a case:true modifier
                 if "case:true" in value:
+                    parts = value.split("case:true", 1)
+                    value = parts[0].strip()
                     case_sensitive = True
-                    value = value.replace("case:true", "").strip()
                 
-                value = value.replace('\\s', ' ')
-            else:
-                # String pattern handling
-                if value.startswith('"') and value.endswith('"'):
-                    value = value[1:-1]  # Remove quotes
-                else:
-                    # Check if value is missing quotes
+                # Validate the regex pattern
+                try:
+                    re.compile(value)
+                except re.error as e:
                     raise NovaParserError(
-                        f"Invalid keyword pattern at line {line_num}: '{value}'. String patterns must be in double quotes")
+                        f"Invalid regex pattern at line {line_num}: '{value}'. Regex error: {str(e)}")
+            else:
+                # Regular string pattern handling
+                if not (value.startswith('"') and value.endswith('"')) and not (value.startswith("'") and value.endswith("'")):
+                    raise NovaParserError(
+                        f"Invalid keyword pattern at line {line_num}: '{value}'. Patterns must be in quotes or as regex.")
                 
-                # Check for explicit case sensitivity marker
-                if " case:true" in value:
+                # Extract pattern without quotes
+                value = value[1:-1]
+                
+                # Check for case sensitivity modifier
+                if "case:true" in value:
+                    parts = value.split("case:true", 1)
+                    value = parts[0].strip()
                     case_sensitive = True
-                    value = value.replace(" case:true", "")
-            
-            result[key] = KeywordPattern(
-                pattern=value,
-                is_regex=is_regex,
-                case_sensitive=case_sensitive
-            )
+                    
+            result[key] = KeywordPattern(pattern=value, is_regex=is_regex, case_sensitive=case_sensitive)
             
         return result
 
