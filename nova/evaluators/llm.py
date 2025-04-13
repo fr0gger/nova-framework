@@ -149,6 +149,134 @@ class OpenAIEvaluator(LLMEvaluator):
             return False, 0.0, {"error": error_msg}
 
 
+class GroqEvaluator(LLMEvaluator):
+    """
+    LLM evaluator using Groq Cloud API.
+    Evaluates prompts using various Groq models.
+    """
+    
+    def __init__(self, api_key: Optional[str] = None, model: str = "llama-3.3-70b-versatile"):
+        """
+        Initialize the LLM evaluator with API credentials.
+        
+        Args:
+            api_key: Groq API key (defaults to GROQ_API_KEY environment variable)
+            model: Groq model to use (defaults to llama-3.3-70b-versatile)
+        """
+        self.api_key = api_key or os.environ.get("GROQ_API_KEY")
+        self.model = model
+        self.base_url = "https://api.groq.com/openai/v1/chat/completions"
+        self.session = _SHARED_SESSION  # Use shared session for connection reuse
+        
+        # Validate API key
+        if not self.api_key:
+            print("Warning: No API key provided for Groq LLM evaluator. Set GROQ_API_KEY environment variable or pass api_key.")
+    
+    def evaluate(self, pattern: str, text: str) -> Union[bool, Tuple[bool, float]]:
+        """
+        Basic evaluate implementation for the BaseEvaluator interface.
+        
+        Args:
+            pattern: The pattern to evaluate
+            text: The text to check
+            
+        Returns:
+            Boolean indicating match or tuple of (matched, confidence)
+        """
+        matched, confidence, _ = self.evaluate_prompt(pattern, text)
+        return matched, confidence
+    
+    def evaluate_prompt(self, prompt_template: str, text: str, temperature: float = 0.1) -> Tuple[bool, float, Dict[str, Any]]:
+        """
+        Evaluate a text using the provided prompt template with Groq API.
+        
+        Args:
+            prompt_template: The prompt to send to the LLM
+            text: The text to evaluate
+            temperature: Temperature setting for the model (0.0-2.0), note that 0 gets converted to 1e-8
+            
+        Returns:
+            Tuple of (matched, confidence, details)
+        """
+        if not self.api_key:
+            # No API key available
+            return False, 0.0, {"error": "No API key available"}
+        
+        # Ensure temperature is within valid range and not exactly 0 (Groq converts 0 to 1e-8)
+        if temperature == 0:
+            temperature = 1e-8
+        elif temperature > 2.0:
+            temperature = 2.0
+            
+        try:
+            # Format the complete prompt
+            full_prompt = (
+                f"{prompt_template}\n\n"
+                f"Text to evaluate: {text}\n\n"
+                f"Respond with a JSON object with keys: matched (boolean), confidence (float 0-1), reason (string)"
+            )
+            
+            # Call the Groq API using the shared session
+            response = self.session.post(
+                self.base_url,
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": self.model,
+                    "messages": [
+                        {
+                            "role": "system", 
+                            "content": "You are a helpful assistant that evaluates text based on the given criteria. "
+                                      "Respond with a JSON object containing 'matched' (boolean), 'confidence' (float 0-1), "
+                                      "and 'reason' (string)."
+                        },
+                        {"role": "user", "content": full_prompt}
+                    ],
+                    "temperature": temperature,  # Use the provided temperature
+                    "response_format": {"type": "json_object"}
+                },
+                timeout=10  # Add timeout for network operations
+            )
+            
+            # Process the response
+            if response.status_code == 200:
+                result = response.json()
+                content = result.get("choices", [{}])[0].get("message", {}).get("content", "{}")
+                
+                # Parse the JSON response
+                try:
+                    evaluation = json.loads(content)
+                    matched = bool(evaluation.get("matched", False))
+                    confidence = float(evaluation.get("confidence", 0.0))
+                    
+                    # Add additional info to the result
+                    evaluation["model"] = self.model
+                    evaluation["api_status"] = "success"
+                    evaluation["evaluator_type"] = "groq"
+                    evaluation["temperature"] = temperature  # Include the temperature used
+                    
+                    return matched, confidence, evaluation
+                except json.JSONDecodeError:
+                    print(f"Failed to parse LLM response: {content}")
+                    return False, 0.0, {"error": "Invalid response format", "raw_content": content}
+            else:
+                error_msg = f"API error: {response.status_code}, {response.text}"
+                print(error_msg)
+                return False, 0.0, {"error": error_msg, "status_code": response.status_code}
+        
+        except requests.Timeout:
+            error_msg = "API request timed out"
+            print(error_msg)
+            return False, 0.0, {"error": error_msg}
+            
+        except Exception as e:
+            error_msg = f"Error in LLM evaluation: {str(e)}"
+            print(error_msg)
+            return False, 0.0, {"error": error_msg}
+
+
 class AnthropicEvaluator(LLMEvaluator):
     """
     LLM evaluator using Anthropic's Claude API.
@@ -708,7 +836,7 @@ def get_validated_evaluator(llm_type: str, model: Optional[str] = None, verbose:
     If the requested evaluator can't be created, raises an exception.
     
     Args:
-        llm_type: Type of LLM evaluator ('openai', 'anthropic', 'azure', or 'ollama')
+        llm_type: Type of LLM evaluator ('openai', 'anthropic', 'azure', 'ollama', or 'groq')
         model: Optional model name to use
         verbose: Whether to print verbose information
         
@@ -760,6 +888,16 @@ def get_validated_evaluator(llm_type: str, model: Optional[str] = None, verbose:
         except (requests.ConnectionError, requests.Timeout):
             raise ValueError(f"Could not connect to Ollama at {host}. Ensure Ollama service is running.")
     
+    elif llm_type.lower() == 'groq':
+        api_key = os.environ.get("GROQ_API_KEY")
+        if api_key:
+            selected_model = model or "llama-3.3-70b-versatile"
+            if verbose:
+                print(f"✓ Using Groq evaluator with model: {selected_model}")
+            return GroqEvaluator(api_key=api_key, model=selected_model)
+        else:
+            raise ValueError("GROQ_API_KEY not set in environment variables. Cannot use Groq evaluator.")
+    
     elif llm_type.lower() == 'openai':
         api_key = os.environ.get("OPENAI_API_KEY")
         if api_key:
@@ -772,4 +910,4 @@ def get_validated_evaluator(llm_type: str, model: Optional[str] = None, verbose:
     
     else:
         # Invalid LLM type
-        raise ValueError(f"Unsupported LLM type: {llm_type}. Supported types are: openai, anthropic, azure, ollama")
+        raise ValueError(f"Unsupported LLM type: {llm_type}. Supported types are: openai, anthropic, azure, ollama, groq")

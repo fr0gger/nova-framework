@@ -52,6 +52,12 @@ export AZURE_OPENAI_API_KEY="your_azure_api_key_here"
 export AZURE_OPENAI_ENDPOINT="your_azure_endpoint_here"
 ```
 
+### Groq
+```
+# For Groq models (Llama-3, etc.)
+export GROQ_API_KEY="your_groq_api_key_here"
+```
+
 ### Ollama (Local Models)
 For Ollama, no API key is needed as it runs locally, but you need to have Ollama installed and running:
 ```
@@ -76,6 +82,9 @@ llm:
     endpoint: your_azure_endpoint
     deployment_name: gpt-35-turbo
     api_version: 2023-05-15
+  groq:
+    api_key: your_groq_api_key
+    model: llama-3.3-70b-versatile
   ollama:
     host: http://localhost:11434
     model: llama3

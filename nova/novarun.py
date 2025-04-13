@@ -22,12 +22,14 @@ from colorama import Fore, Style, Back
 try:
     from nova.core.parser import NovaParser
     from nova.core.matcher import NovaMatcher
+    from nova.core.scanner import NovaScanner
     from nova.utils.config import get_config
     from nova.evaluators.llm import (
         OpenAIEvaluator, 
         AnthropicEvaluator, 
         AzureOpenAIEvaluator, 
         OllamaEvaluator,
+        GroqEvaluator,
         get_validated_evaluator
     )
 except ImportError:
@@ -166,8 +168,47 @@ def _find_rule_end(text: str) -> int:
     return -1
 
 
+def check_if_rule_needs_llm(rule) -> bool:
+    """
+    Check if a rule requires LLM evaluation based on its patterns and condition.
+    
+    Args:
+        rule: The parsed Nova rule
+        
+    Returns:
+        Boolean indicating whether LLM evaluation is needed
+    """
+    # Check if the rule has LLM patterns
+    if hasattr(rule, 'llms') and rule.llms:
+        return True
+        
+    # Check if the condition references LLM evaluation
+    if hasattr(rule, 'condition') and rule.condition and 'llm.' in rule.condition.lower():
+        return True
+        
+    return False
+
+
+def check_if_rules_need_llm(rules) -> bool:
+    """
+    Check if any rule in a list requires LLM evaluation.
+    
+    Args:
+        rules: List of parsed Nova rules
+        
+    Returns:
+        Boolean indicating whether any rule needs LLM evaluation
+    """
+    for rule in rules:
+        if check_if_rule_needs_llm(rule):
+            return True
+    
+    return False
+
+
 def process_prompt(rule_text: str, prompt: str, verbose: bool = False, 
-                   llm_type: str = 'openai', model: Optional[str] = None) -> Dict[str, Any]:
+                   llm_type: str = 'openai', model: Optional[str] = None,
+                   llm_evaluator: Optional[Any] = None) -> Dict[str, Any]:
     """
     Process a prompt against a rule.
     
@@ -177,6 +218,7 @@ def process_prompt(rule_text: str, prompt: str, verbose: bool = False,
         verbose: Whether to enable verbose output
         llm_type: Type of LLM evaluator to use ('openai', 'anthropic', 'azure', or 'ollama')
         model: Optional model name to use
+        llm_evaluator: Optional pre-existing LLM evaluator to reuse
         
     Returns:
         Dictionary containing match results or None if processing failed
@@ -190,12 +232,18 @@ def process_prompt(rule_text: str, prompt: str, verbose: bool = False,
         print(f"{Fore.RED}Error parsing rule: {e}")
         sys.exit(1)
     
-    # Get the appropriate LLM evaluator with validation
-    llm_evaluator = get_validated_evaluator(llm_type, model, verbose)
+    # Check if this rule needs LLM evaluation
+    needs_llm = check_if_rule_needs_llm(rule)
     
-    if llm_evaluator is None:
-        print(f"{Fore.RED}Error: Failed to create LLM evaluator. Cannot process prompt.")
-        sys.exit(1)
+    # Use provided evaluator or create one if needed
+    if needs_llm and not llm_evaluator:
+        llm_evaluator = get_validated_evaluator(llm_type, model, verbose)
+        if llm_evaluator is None:
+            print(f"{Fore.RED}Error: Failed to create LLM evaluator but rule requires it.")
+            sys.exit(1)
+    elif not needs_llm:
+        if verbose:
+            print(f"{Fore.GREEN}Rule '{rule.name}' only uses keyword/semantic matching. Skipping LLM evaluator creation.")
     
     # Match the prompt against the rule
     matcher = NovaMatcher(rule, llm_evaluator=llm_evaluator)
@@ -216,8 +264,8 @@ def process_prompt(rule_text: str, prompt: str, verbose: bool = False,
                 "all_semantic_matches": {},
                 "all_llm_matches": {},
                 "llm_info": {
-                    "type": llm_type,
-                    "model": getattr(llm_evaluator, 'model', None)
+                    "type": llm_type if needs_llm else "none",
+                    "model": getattr(llm_evaluator, 'model', None) if needs_llm else None
                 }
             }
         }
@@ -230,8 +278,8 @@ def process_prompt(rule_text: str, prompt: str, verbose: bool = False,
         result["debug"] = {}
     
     result["debug"]["llm_info"] = {
-        "type": llm_type,
-        "model": getattr(llm_evaluator, 'model', None)
+        "type": llm_type if needs_llm else "none",
+        "model": getattr(llm_evaluator, 'model', None) if needs_llm and llm_evaluator else None
     }
     
     return result
@@ -440,7 +488,7 @@ def main():
     parser.add_argument('-v', '--verbose', action='store_true', help='Enable verbose output')
     parser.add_argument('-c', '--config', help='Path to Nova configuration file')
     parser.add_argument('-s', '--single', action='store_true', help='Check against only the first rule in the file (default reads all rules)')
-    parser.add_argument('-l', '--llm', choices=['openai', 'anthropic', 'azure', 'ollama'], 
+    parser.add_argument('-l', '--llm', choices=['openai', 'anthropic', 'azure', 'ollama', 'groq'], 
                        default='openai', help='LLM evaluator to use')
     parser.add_argument('-m', '--model', help='Specific model to use with the LLM evaluator')
     
@@ -482,6 +530,34 @@ def main():
             
         print(f"\n{Fore.CYAN}Found {Fore.WHITE}{len(rule_blocks)}{Fore.CYAN} rules in {Fore.WHITE}{args.rule}")
         
+        # Parse all rules first
+        parser = NovaParser()
+        parsed_rules = []
+        for rule_idx, rule_text in enumerate(rule_blocks):
+            try:
+                rule = parser.parse(rule_text)
+                parsed_rules.append(rule)
+            except Exception as e:
+                print(f"{Fore.RED}Error parsing rule #{rule_idx+1}: {e}")
+        
+        if not parsed_rules:
+            print(f"{Fore.RED}Failed to parse any rules. Exiting.")
+            sys.exit(1)
+            
+        # Check if any rule needs LLM evaluation and create a single evaluator if needed
+        needs_llm = check_if_rules_need_llm(parsed_rules)
+        llm_evaluator = None
+        
+        if needs_llm:
+            if args.verbose:
+                print(f"{Fore.GREEN}Creating single LLM evaluator for all rules that need it...")
+            llm_evaluator = get_validated_evaluator(args.llm, args.model, args.verbose)
+            if llm_evaluator is None:
+                print(f"{Fore.RED}Error: Failed to create LLM evaluator but at least one rule requires it.")
+                sys.exit(1)
+        elif args.verbose:
+            print(f"{Fore.GREEN}No rules require LLM evaluation. Skipping LLM evaluator creation.")
+        
         # Process each prompt against all rules
         all_results = []
         all_matched_prompts = []
@@ -492,9 +568,10 @@ def main():
             total_rules = len(rule_blocks)
             prompt_results = []
             
-            for rule_idx, rule_text in enumerate(rule_blocks):
+            for rule_idx, (rule_text, rule) in enumerate(zip(rule_blocks, parsed_rules)):
                 try:
-                    result = process_prompt(rule_text, prompt, args.verbose, args.llm, args.model)
+                    # Use the shared LLM evaluator for all rules
+                    result = process_prompt(rule_text, prompt, args.verbose, args.llm, args.model, llm_evaluator)
                     prompt_results.append(result)
                     
                     if result['matched']:
@@ -532,8 +609,30 @@ def main():
         all_results = []
         all_matched = False
         
+        # Parse the rule once for validation
+        try:
+            parser = NovaParser()
+            single_rule = parser.parse(file_content)
+        except Exception as e:
+            print(f"{Fore.RED}Error parsing rule: {e}")
+            sys.exit(1)
+            
+        # Create LLM evaluator if needed for this rule
+        needs_llm = check_if_rule_needs_llm(single_rule)
+        llm_evaluator = None
+        
+        if needs_llm:
+            if args.verbose:
+                print(f"{Fore.GREEN}Creating LLM evaluator for rule '{single_rule.name}'...")
+            llm_evaluator = get_validated_evaluator(args.llm, args.model, args.verbose)
+            if llm_evaluator is None:
+                print(f"{Fore.RED}Error: Failed to create LLM evaluator but rule requires it.")
+                sys.exit(1)
+        elif args.verbose:
+            print(f"{Fore.GREEN}Rule '{single_rule.name}' doesn't require LLM evaluation. Skipping LLM evaluator creation.")
+        
         for prompt_idx, prompt in enumerate(prompts):
-            result = process_prompt(file_content, prompt, args.verbose, args.llm, args.model)
+            result = process_prompt(file_content, prompt, args.verbose, args.llm, args.model, llm_evaluator)
             all_results.append(result)
             
             if result['matched']:
