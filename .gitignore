@@ -7,3 +7,7 @@ wheels/
 *.egg-info
 # Virtual environments
 .venv
+optimized_matcher.py
+optimized_test.py
+# Pytest cache
+tests/

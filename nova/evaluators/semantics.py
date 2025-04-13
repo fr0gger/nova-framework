@@ -23,7 +23,7 @@ class DefaultSemanticEvaluator(SemanticEvaluator):
     Performs semantic similarity matching between patterns and text.
     """
     
-    def __init__(self, model_name: str = 'all-MiniLM-L6-v2'):
+    def __init__(self, model_name: str = 'all-MiniLM-L6-v2'):  
         """
         Initialize the semantic evaluator with a sentence transformer model.
         
@@ -58,9 +58,12 @@ class DefaultSemanticEvaluator(SemanticEvaluator):
         try:
             # Import here to avoid dependency issues if not needed
             from sentence_transformers import SentenceTransformer
-            #print(f"Loading semantic model {self.model_name} (first time)")
             self.model = SentenceTransformer(self.model_name)
-            # Cache the model globally
+
+            # Prevent tokenizer decode warnings
+            if hasattr(self.model, 'tokenizer'):
+                self.model.tokenizer.clean_up_tokenization_spaces = True
+
             _MODEL_CACHE[self.model_name] = self.model
             return True
         except Exception as e:
