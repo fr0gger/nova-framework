@@ -942,12 +942,12 @@
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
 <p>Nova is available as a Python package via pip. It works with Python 3.8 and above.</p>
 <h3 id="quick-installation">Quick Installation<a class="headerlink" href="#quick-installation" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>nova-hunting
+<div class="language-bash highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>nova
 </code></pre></div>
 <p>This command will install Nova and its dependencies, including the novarun command-line tool which will be automatically added to your path.</p>
 <h3 id="development-installation">Development Installation<a class="headerlink" href="#development-installation" title="Permanent link">&para;</a></h3>
 <p>For development or to get the latest version, you can install directly from GitHub:</p>
-<div class="language-text highlight"><pre><span></span><code>pip install git+https://github.com/fr0gger/nova-framework.git
+<div class="language-text highlight"><pre><span></span><code>pip install git+https://github.com/fr0gger/nova.git
 </code></pre></div>
 <h1 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h1>
 <p>Nova requires API keys for the LLM providers you want to use. You can set these keys as environment variables:</p>
@@ -964,6 +964,10 @@ export ANTHROPIC_API_KEY=&quot;your_anthropic_api_key_here&quot;
 <div class="language-text highlight"><pre><span></span><code># For Azure OpenAI Service
 export AZURE_OPENAI_API_KEY=&quot;your_azure_api_key_here&quot;
 export AZURE_OPENAI_ENDPOINT=&quot;your_azure_endpoint_here&quot;
+</code></pre></div>
+<h3 id="groq">Groq<a class="headerlink" href="#groq" title="Permanent link">&para;</a></h3>
+<div class="language-text highlight"><pre><span></span><code># For Groq models (Llama-3, etc.)
+export GROQ_API_KEY=&quot;your_groq_api_key_here&quot;
 </code></pre></div>
 <h3 id="ollama-local-models">Ollama (Local Models)<a class="headerlink" href="#ollama-local-models" title="Permanent link">&para;</a></h3>
 <p>For Ollama, no API key is needed as it runs locally, but you need to have Ollama installed and running:
@@ -986,6 +990,9 @@ export OLLAMA_HOST=&quot;http://localhost:11434&quot;
 <span class="w">    </span><span class="nt">endpoint</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">your_azure_endpoint</span>
 <span class="w">    </span><span class="nt">deployment_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gpt-35-turbo</span>
 <span class="w">    </span><span class="nt">api_version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2023-05-15</span>
+<span class="w">  </span><span class="nt">groq</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">api_key</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">your_groq_api_key</span>
+<span class="w">    </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">llama-3.3-70b-versatile</span>
 <span class="w">  </span><span class="nt">ollama</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">http://localhost:11434</span>
 <span class="w">    </span><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">llama3</span>
@@ -1000,7 +1007,7 @@ export OLLAMA_HOST=&quot;http://localhost:11434&quot;
 <li>Dependency conflicts: If you encounter dependency conflicts, consider using a virtual environment:
 <div class="language-text highlight"><pre><span></span><code>python -m venv nova-env
 source nova-env/bin/activate  # On Windows: nova-env\\Scripts\\activate
-pip install nova-hunting
+pip install nova
 </code></pre></div></li>
 </ol>
 <h2 id="llm-connection-issues">LLM Connection Issues<a class="headerlink" href="#llm-connection-issues" title="Permanent link">&para;</a></h2>
@@ -1011,7 +1018,7 @@ pip install nova-hunting
 </ol>
 <h1 id="uninstallation">Uninstallation<a class="headerlink" href="#uninstallation" title="Permanent link">&para;</a></h1>
 <p>To remove Nova:
-<div class="language-text highlight"><pre><span></span><code>pip uninstall nova-hunting
+<div class="language-text highlight"><pre><span></span><code>pip uninstall nova
 </code></pre></div></p>
 <h1 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h1>
 <p>Once you have Nova installed, you can proceed to:</p>

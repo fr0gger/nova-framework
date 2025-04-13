@@ -1034,7 +1034,7 @@ either use the command-line tool <code>novarun</code> or import Nova into your o
 <p>The <code>novarun</code> command-line tool is automatically added to your path when you install the Nova framework.</p>
 <h3 id="command-line-options">Command-Line Options<a class="headerlink" href="#command-line-options" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code>$<span class="w"> </span>novarun<span class="w"> </span>-h
-usage:<span class="w"> </span>novarun.py<span class="w"> </span><span class="o">[</span>-h<span class="o">]</span><span class="w"> </span>-r<span class="w"> </span>RULE<span class="w"> </span><span class="o">(</span>-p<span class="w"> </span>PROMPT<span class="w"> </span><span class="p">|</span><span class="w"> </span>-f<span class="w"> </span>FILE<span class="o">)</span><span class="w"> </span><span class="o">[</span>-v<span class="o">]</span><span class="w"> </span><span class="o">[</span>-c<span class="w"> </span>CONFIG<span class="o">]</span><span class="w"> </span><span class="o">[</span>-a<span class="o">]</span><span class="w"> </span><span class="o">[</span>-l<span class="w"> </span><span class="o">{</span>openai,anthropic,azure,ollama<span class="o">}]</span><span class="w"> </span><span class="o">[</span>-m<span class="w"> </span>MODEL<span class="o">]</span>
+usage:<span class="w"> </span>novarun.py<span class="w"> </span><span class="o">[</span>-h<span class="o">]</span><span class="w"> </span>-r<span class="w"> </span>RULE<span class="w"> </span><span class="o">(</span>-p<span class="w"> </span>PROMPT<span class="w"> </span><span class="p">|</span><span class="w"> </span>-f<span class="w"> </span>FILE<span class="o">)</span><span class="w"> </span><span class="o">[</span>-v<span class="o">]</span><span class="w"> </span><span class="o">[</span>-c<span class="w"> </span>CONFIG<span class="o">]</span><span class="w"> </span><span class="o">[</span>-a<span class="o">]</span><span class="w"> </span><span class="o">[</span>-l<span class="w"> </span><span class="o">{</span>openai,anthropic,azure,ollama,groq<span class="o">}]</span><span class="w"> </span><span class="o">[</span>-m<span class="w"> </span>MODEL<span class="o">]</span>
 
 Nova<span class="w"> </span>Rule<span class="w"> </span>Runner<span class="w"> </span>-<span class="w"> </span>Check<span class="w"> </span>prompts<span class="w"> </span>against<span class="w"> </span>Nova<span class="w"> </span>rules
 
@@ -1046,7 +1046,7 @@ options:
 <span class="w">  </span>-v,<span class="w"> </span>--verbose<span class="w">         </span>Enable<span class="w"> </span>verbose<span class="w"> </span>output
 <span class="w">  </span>-c,<span class="w"> </span>--config<span class="w"> </span>CONFIG<span class="w">   </span>Path<span class="w"> </span>to<span class="w"> </span>Nova<span class="w"> </span>configuration<span class="w"> </span>file
 <span class="w">  </span>-a,<span class="w"> </span>--all<span class="w">             </span>Check<span class="w"> </span>against<span class="w"> </span>all<span class="w"> </span>rules<span class="w"> </span><span class="k">in</span><span class="w"> </span>the<span class="w"> </span>file
-<span class="w">  </span>-l,<span class="w"> </span>--llm<span class="w"> </span><span class="o">{</span>openai,anthropic,azure,ollama<span class="o">}</span>
+<span class="w">  </span>-l,<span class="w"> </span>--llm<span class="w"> </span><span class="o">{</span>openai,anthropic,azure,ollama,groq<span class="o">}</span>
 <span class="w">                        </span>LLM<span class="w"> </span>evaluator<span class="w"> </span>to<span class="w"> </span>use
 <span class="w">  </span>-m,<span class="w"> </span>--model<span class="w"> </span>MODEL<span class="w">     </span>Specific<span class="w"> </span>model<span class="w"> </span>to<span class="w"> </span>use<span class="w"> </span>with<span class="w"> </span>the<span class="w"> </span>LLM<span class="w"> </span>evaluator
 </code></pre></div>
@@ -1253,6 +1253,9 @@ python<span class="w"> </span>novarun.py<span class="w"> </span>-r<span class="w
 <span class="c1"># Using Azure OpenAI</span>
 python<span class="w"> </span>novarun.py<span class="w"> </span>-r<span class="w"> </span>rule.nov<span class="w"> </span>-p<span class="w"> </span><span class="s2">&quot;prompt&quot;</span><span class="w"> </span>-l<span class="w"> </span>azure
 
+<span class="c1"># Using Groq</span>
+python<span class="w"> </span>novarun.py<span class="w"> </span>-r<span class="w"> </span>rule.nov<span class="w"> </span>-p<span class="w"> </span><span class="s2">&quot;prompt&quot;</span><span class="w"> </span>-l<span class="w"> </span>groq<span class="w"> </span>-m<span class="w"> </span>llama-3.3-70b-versatile
+
 <span class="c1"># Using local Ollama</span>
 python<span class="w"> </span>novarun.py<span class="w"> </span>-r<span class="w"> </span>rule.nov<span class="w"> </span>-p<span class="w"> </span><span class="s2">&quot;prompt&quot;</span><span class="w"> </span>-l<span class="w"> </span>ollama<span class="w"> </span>-m<span class="w"> </span>llama3
 </code></pre></div>
@@ -1261,9 +1264,9 @@ python<span class="w"> </span>novarun.py<span class="w"> </span>-r<span class="w
 </code></pre></div>
 <h2 id="api-usage">API Usage<a class="headerlink" href="#api-usage" title="Permanent link">&para;</a></h2>
 <p>You can also integrate Nova directly into your Python applications. Here's a basic example:</p>
-<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">nova.core.parser</span> <span class="kn">import</span> <span class="n">NovaParser</span>
-<span class="kn">from</span> <span class="nn">nova.core.matcher</span> <span class="kn">import</span> <span class="n">NovaMatcher</span>
-<span class="kn">from</span> <span class="nn">nova.evaluators.llm</span> <span class="kn">import</span> <span class="n">OpenAIEvaluator</span>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">nova.core.parser</span><span class="w"> </span><span class="kn">import</span> <span class="n">NovaParser</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">nova.core.matcher</span><span class="w"> </span><span class="kn">import</span> <span class="n">NovaMatcher</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">nova.evaluators.llm</span><span class="w"> </span><span class="kn">import</span> <span class="n">OpenAIEvaluator</span><span class="p">,</span> <span class="n">GroqEvaluator</span>
 
 <span class="c1"># Load a rule</span>
 <span class="n">parser</span> <span class="o">=</span> <span class="n">NovaParser</span><span class="p">()</span>
@@ -1271,8 +1274,13 @@ python<span class="w"> </span>novarun.py<span class="w"> </span>-r<span class="w
     <span class="n">rule</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
 
 <span class="c1"># Create a matcher with appropriate evaluator</span>
-<span class="n">evaluator</span> <span class="o">=</span> <span class="n">OpenAIEvaluator</span><span class="p">()</span>  <span class="c1"># Requires OPENAI_API_KEY in environment</span>
+<span class="c1"># For OpenAI:</span>
+<span class="n">evaluator</span> <span class="o">=</span> <span class="n">OpenAIEvaluator</span><span class="p">(</span><span class="n">api_key</span><span class="o">=</span><span class="s2">&quot;your_key_here&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">)</span>  <span class="c1"># Or use OPENAI_API_KEY from env</span>
 <span class="n">matcher</span> <span class="o">=</span> <span class="n">NovaMatcher</span><span class="p">(</span><span class="n">rule</span><span class="p">,</span> <span class="n">llm_evaluator</span><span class="o">=</span><span class="n">evaluator</span><span class="p">)</span>
+
+<span class="c1"># For Groq:</span>
+<span class="c1"># evaluator = GroqEvaluator(api_key=&quot;your_key_here&quot;, model=&quot;llama-3.3-70b-versatile&quot;)  # Or use GROQ_API_KEY from env</span>
+<span class="c1"># matcher = NovaMatcher(rule, llm_evaluator=evaluator)</span>
 
 <span class="c1"># Check a prompt</span>
 <span class="n">prompt</span> <span class="o">=</span> <span class="s2">&quot;Is this prompt safe to process?&quot;</span>
