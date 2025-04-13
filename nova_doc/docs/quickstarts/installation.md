@@ -16,7 +16,7 @@ Nova is available as a Python package via pip. It works with Python 3.8 and abov
 ### Quick Installation
 
 ```bash
-pip install nova
+pip install nova-hunting
 ```
 
 This command will install Nova and its dependencies, including the novarun command-line tool which will be automatically added to your path.
@@ -103,7 +103,7 @@ novarun -r rules.nov -p "prompt" -c nova_config.yaml
 ```
 python -m venv nova-env
 source nova-env/bin/activate  # On Windows: nova-env\\Scripts\\activate
-pip install nova
+pip install nova-hunting
 ```
 
 ## LLM Connection Issues
@@ -115,7 +115,7 @@ pip install nova
 # Uninstallation
 To remove Nova:
 ```
-pip uninstall nova
+pip uninstall nova-hunting
 ```
 
 # Next Steps
