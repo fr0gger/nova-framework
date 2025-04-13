@@ -13,7 +13,7 @@ Get up and running with Nova in just two minutes to detect prompts according to 
 ## Installation
 
 ```bash
-pip install nova
+pip install nova-hunting
 ```
 
 ## Set up your LLM API key
