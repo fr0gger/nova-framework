@@ -60,7 +60,7 @@ class DefaultSemanticEvaluator(SemanticEvaluator):
             from sentence_transformers import SentenceTransformer
             self.model = SentenceTransformer(self.model_name)
 
-            # Prevent tokenizer decode warnings
+            # Explicitly set clean_up_tokenization_spaces to True to avoid the FutureWarning
             if hasattr(self.model, 'tokenizer'):
                 self.model.tokenizer.clean_up_tokenization_spaces = True
 

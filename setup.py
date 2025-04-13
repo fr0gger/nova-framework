@@ -1,8 +1,19 @@
 from setuptools import setup, find_packages
 
+# Include the requirements directly in setup.py to avoid file not found errors during build
+requirements = [
+    "sentence-transformers",
+    "transformers",
+    "requests",
+    "pyyaml",
+    "colorama",
+    "openai",
+    "anthropic"
+]
+
 setup(
     name='nova-hunting',
-    version='0.1.2',
+    version='0.1.4',  # Updated version from 0.1.3 to 0.1.4
     author='Thomas Roccia',
     author_email='contact@securitybreak.io',
     description='Prompt Pattern Matching Framework for Generative AI',
@@ -10,7 +21,7 @@ setup(
     long_description_content_type='text/markdown',
     url='https://github.com/fr0gger/nova-framework',
     packages=find_packages(exclude=["tests*", "nova_doc*", "*.pyc"]),
-    install_requires=open('requirements.txt').read().splitlines(),
+    install_requires=requirements,
     include_package_data=True,
     package_data={'nova': ['nova_rules/*.nov']},
     entry_points={
@@ -25,4 +36,5 @@ setup(
     ],
     python_requires='>=3.9',
     license='MIT',
+    zip_safe=False,  # This helps ensure all files are properly installed
 )
