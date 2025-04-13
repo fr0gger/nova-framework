@@ -1,8 +1,8 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='nova-framework',
-    version='0.1.0',
+    name='nova-hunting',
+    version='0.1.2',
     author='Thomas Roccia',
     author_email='contact@securitybreak.io',
     description='Prompt Pattern Matching Framework for Generative AI',
