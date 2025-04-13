@@ -18,7 +18,7 @@ The `novarun` command-line tool is automatically added to your path when you ins
 
 ```bash
 $ novarun -h
-usage: novarun.py [-h] -r RULE (-p PROMPT | -f FILE) [-v] [-c CONFIG] [-a] [-l {openai,anthropic,azure,ollama}] [-m MODEL]
+usage: novarun.py [-h] -r RULE (-p PROMPT | -f FILE) [-v] [-c CONFIG] [-a] [-l {openai,anthropic,azure,ollama,groq}] [-m MODEL]
 
 Nova Rule Runner - Check prompts against Nova rules
 
@@ -30,7 +30,7 @@ options:
   -v, --verbose         Enable verbose output
   -c, --config CONFIG   Path to Nova configuration file
   -a, --all             Check against all rules in the file
-  -l, --llm {openai,anthropic,azure,ollama}
+  -l, --llm {openai,anthropic,azure,ollama,groq}
                         LLM evaluator to use
   -m, --model MODEL     Specific model to use with the LLM evaluator
 ```
@@ -262,6 +262,9 @@ python novarun.py -r rule.nov -p "prompt" -l anthropic
 # Using Azure OpenAI
 python novarun.py -r rule.nov -p "prompt" -l azure
 
+# Using Groq
+python novarun.py -r rule.nov -p "prompt" -l groq -m llama-3.3-70b-versatile
+
 # Using local Ollama
 python novarun.py -r rule.nov -p "prompt" -l ollama -m llama3
 ```
@@ -279,7 +282,7 @@ You can also integrate Nova directly into your Python applications. Here's a bas
 ```python
 from nova.core.parser import NovaParser
 from nova.core.matcher import NovaMatcher
-from nova.evaluators.llm import OpenAIEvaluator
+from nova.evaluators.llm import OpenAIEvaluator, GroqEvaluator
 
 # Load a rule
 parser = NovaParser()
@@ -287,8 +290,13 @@ with open('my_rule.nov', 'r') as f:
     rule = parser.parse(f.read())
 
 # Create a matcher with appropriate evaluator
-evaluator = OpenAIEvaluator()  # Requires OPENAI_API_KEY in environment
+# For OpenAI:
+evaluator = OpenAIEvaluator(api_key="your_key_here", model="gpt-4o-mini")  # Or use OPENAI_API_KEY from env
 matcher = NovaMatcher(rule, llm_evaluator=evaluator)
+
+# For Groq:
+# evaluator = GroqEvaluator(api_key="your_key_here", model="llama-3.3-70b-versatile")  # Or use GROQ_API_KEY from env
+# matcher = NovaMatcher(rule, llm_evaluator=evaluator)
 
 # Check a prompt
 prompt = "Is this prompt safe to process?"
