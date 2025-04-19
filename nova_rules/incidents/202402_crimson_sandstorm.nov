@@ -21,10 +21,32 @@ rule Phishing_CrimsonSandstorm
         (keywords.$geo_target and keywords.$industry_target and keywords.$lure) and llm.$phishing
 }
 
-rule DefenseEvasion_CrimsonSandstorm
+rule DefenseEvasionCode_CrimsonSandstorm
 {
     meta:
-        description = "Detection of Crimson Sandstorm defense evasion coding prompts, specifically AV bypass, code for evasion or code for cleanup."
+        description = "Detection of Crimson Sandstorm defense evasion coding prompts, specifically code for evasion or code for cleanup."
+        author = "@tas_kmanager"
+        version = "1.0.0"
+        category = "support"
+        severity = "medium"
+        attack_category = "LLM-enhanced scripting techniques"
+        reference = "Microsoft – Staying Ahead of Threat Actors in the Age of AI (Feb 2024)"
+
+    keywords:
+        $evasion = /(obfuscate|bypasses|undetectable|evade|stealth|silently|without detection|no detection)/i
+        $cleanup = /(delete files after program exits | clean up all traces after execution | remove logs after process ends | delete working directory silently | remove batch files after use)/i
+    
+    llm:
+        $defense_evasion = "Analyze if this prompt attempting to generate either code that evade detection or code that perform clean up operation after execution. Return a clear yes/no assessment." (0.1)
+
+    condition:
+        (keywords.$evasion or keywords.$cleanup) and llm.$defense_evasion
+}
+
+rule DefenseEvasionAV_CrimsonSandstorm
+{
+    meta:
+        description = "Detection of Crimson Sandstorm defense evasion coding prompts, specifically AV bypass"
         author = "@tas_kmanager"
         version = "1.0.0"
         category = "support"
@@ -34,13 +56,11 @@ rule DefenseEvasion_CrimsonSandstorm
 
     keywords:
         $av_bypass = /(disable|turn off|kill|stop|blind|group policy to disable|add to exclusion|modify security policy|impair|minifilter|uninstall|unload driver)/i
-        $av = /(defender|mde|crowdstrike|sentinelone|symantec|edr|av|antivirus|carbon black|cb defense|bitdefender|eset|mcafee|kaspersky|sophos|trend micro|cylance|fireeye|falcon|norton|secureworks|zscaler|f-secure|forti|malwarebytes|sysmon|clamav|security log)/i
-        $evasion = /(obfuscate|bypasses|undetectable|evade|stealth|silently|without detection|no detection)/i
-        $cleanup = /(delete files after program exits | clean up all traces after execution | remove logs after process ends | delete working directory silently | remove batch files after use)/i
-    
+        $av = /(defender|mde|crowdstrike|sentinelone|symantec|edr|av|antivirus|carbon black|cb defense|bitdefender|eset|mcafee|kaspersky|sophos|trend micro|cylance|fireeye|falcon|norton|secureworks|zscaler|fsecure|forti|malwarebytes|sysmon|clamav|security log)/i
+   
     llm:
-        $defense_evasion = "Analyze if this prompt attempting to generate either antivirus/edr bypass code or code that evade detection or code that perform clean up operation after execution. Return a clear yes/no assessment." (0.1)
+        $defense_evasion = "Analyze if this prompt attempting to generate either antivirus/edr bypass code. Return a clear yes/no assessment." (0.1)
 
     condition:
-        ((keywords.$av and keywords.$av_bypass) or keywords.$evasion or keywords.$cleanup) and llm.$defense_evasion
+        (keywords.$av_bypass and keywords.$av) and llm.$defense_evasion
 }
