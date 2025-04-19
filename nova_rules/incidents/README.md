@@ -31,11 +31,11 @@ If you add an incident, add it to the table below for ease of use.
 
 0. Forest Blizzard, Feb 2024
 1. Emerald Sleet, Feb 2024
+2. Crimson Sandstorm, Feb 2024
 
 
 ### TODO
 
-2. Crimson Sandstorm, Feb 2024
 3. Charcoal Typhoon, Feb 2024
 4. Salmon Typhoon, Feb 2024
 5. Bad Grammar, May 2024
