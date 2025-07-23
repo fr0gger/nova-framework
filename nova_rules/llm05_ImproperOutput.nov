@@ -3,6 +3,7 @@ rule LLM_Improper_Output_Handling
     meta:
         description = "Detects potential exploitation of unsafe LLM output handling such as code execution, XSS, SQLi, or injection into downstream systems without validation."
         author = "@fr0gger_"
+        uuid = "2d5d267e-a991-4400-92fb-e40b02395339"
 
     keywords:
         $shell_exec = /(exec|eval|os\.system|subprocess\.run)/
@@ -27,4 +28,3 @@ rule LLM_Improper_Output_Handling
         any of semantics.* or
         any of llm.*
 }
-
