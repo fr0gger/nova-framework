@@ -5,6 +5,7 @@ rule SensitiveInfoDisclosure
         author = "fr0gger_"
         severity = "high"
         version = "1.0"
+        uuid = "f7a0e5d4-539f-411a-84e1-fadd209a01d1"
 
     keywords:
         $pii_name = /\b[A-Z][a-z]+\s[A-Z][a-z]+\b/
@@ -28,4 +29,3 @@ rule SensitiveInfoDisclosure
     condition:
         (keywords.* or semantics.* or llm.$leak_eval)
 }
-
