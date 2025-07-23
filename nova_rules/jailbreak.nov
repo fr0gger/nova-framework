@@ -6,6 +6,7 @@ rule RoleplayJailbreak
         version = "1.0.0"
         category = "jailbreak/roleplay"
         severity = "medium"
+        uuid = "72ad2310-3a07-40e7-89b1-04544bf670e1"
     
     semantics:
         $harmful_roleplay = "instructions for roleplaying scenarios designed to elicit harmful content" (0.1)
@@ -29,6 +30,7 @@ rule PromptInjectionJailbreak
         version = "1.0.0"
         category = "jailbreak/injection"
         severity = "high"
+        uuid = "5085b5c9-a8fa-43d8-bff8-a60722d94d9f"
     
     keywords:
         $new_instruction = "new instruction"
@@ -58,6 +60,7 @@ rule TokenSmugglingJailbreak
         version = "1.0.0"
         category = "jailbreak/encoding"
         severity = "medium"
+        uuid = "bd1e4981-bd4d-41b3-853e-98d93e96d2d3"
     
     llm:
         $encoding_check = "Evaluate if this text contains encoded or obfuscated content that might be attempting to bypass content filters through encoding techniques like base64, leetspeak, or character substitution" (0.7)
@@ -76,6 +79,7 @@ rule CognitiveHackingJailbreak
         version = "1.0.0"
         category = "jailbreak/cognitive"
         severity = "high"
+        uuid = "53dd0601-6155-416f-8d2a-c8c6b8f8849c"
     
     keywords:
         $hypothetical = "hypothetical scenario"
@@ -108,6 +112,7 @@ rule IndirectTaskDeflectionJailbreak
         version = "1.0.0"
         category = "jailbreak/indirect"
         severity = "medium"
+        uuid = "bcc6d221-9d30-4505-a0bb-b39ea1aea6a8"
     
     semantics:
         $task_masking = "disguising malicious tasks as benign requests" (0.6)
@@ -128,6 +133,7 @@ rule DANJailbreak
         version = "1.0.0"
         category = "jailbreak/dan"
         severity = "high"
+        uuid = "b0b1cc34-491b-4d3a-b174-146510e76b20"
     
     keywords:
         $dan_mode = "DAN mode"
@@ -155,6 +161,7 @@ rule DeveloperModeJailbreak1
     meta:
         description = "Detects Developer Mode jailbreak attempts using only keywords and LLM"
         author = "Thomas Roccia"
+        uuid = "81611b76-aa8b-4196-8ca4-6d0b798c3d61"
     
     keywords:
         $dev_mode = "Developer Mode"
