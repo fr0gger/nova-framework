@@ -7,6 +7,7 @@ rule SecurityToolExtensionRule
         category = "scripting/security_tools"
         severity = "medium"
         attack_category = "LLM-enhanced scripting techniques"
+        uuid = "5c91b7ca-0817-4304-897b-c8398666b934"
     
     keywords:
         $develop = "develop"
