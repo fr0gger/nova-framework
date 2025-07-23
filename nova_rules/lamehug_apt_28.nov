@@ -6,6 +6,7 @@ rule ReconGatherWriteCommand
         severity = "high"
         reference = "https://cert.gov.ua/article/6284730"
         hash = "384e8f3d300205546fb8c9b9224011b3b3cb71adc994180ff55e1e6416f65715"
+        uuid = "4737c5db-c438-493c-9c74-c2fb19b516c2"
 
     keywords:
         $info_path = "c:\\programdata\\info"
@@ -41,6 +42,7 @@ rule ExfiltrateDocumentsOneLiner
         severity = "high"
         reference = "https://cert.gov.ua/article/6284730"
         hash = "384e8f3d300205546fb8c9b9224011b3b3cb71adc994180ff55e1e6416f65715"
+        uuid = "1b3f7c52-2445-409f-ac7e-dc8ff70eb87f"
 
     keywords:
         $copy_cmd = "copy recursively"
