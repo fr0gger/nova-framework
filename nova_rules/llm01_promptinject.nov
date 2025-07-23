@@ -5,6 +5,7 @@ rule DirectPromptInjection
         author = "@fr0gger_"
         version = "1.0"
         reference = "LLM01:2025 Prompt Injection"
+        uuid = "e3b474c5-2145-4a47-8c39-c3fe752b6935"
 
     keywords:
         $ignore = /ignore (previous|above|earlier) (instructions|guidelines|prompt)/i
@@ -36,6 +37,7 @@ rule IndirectPromptInjection
         author = "@fr0gger_"
         version = "1.0"
         reference = "LLM01:2025 Prompt Injection"
+        uuid = "22921094-9c2f-4800-be29-d9d756564bc7"
 
     keywords:
         $summarize = /summarize (this|the) (content|text|document|webpage)/i
@@ -66,6 +68,7 @@ rule CodeInjectionPrompt
         author = "@fr0gger_"
         version = "1.0"
         reference = "LLM01:2025 Prompt Injection"
+        uuid = "25040029-10a1-4322-9b0a-520b5890a807"
 
     keywords:
         $execute = /execute (this|the following) code/i
@@ -96,6 +99,7 @@ rule PayloadSplittingAttack
         author = "@fr0gger_"
         version = "1.0"
         reference = "LLM01:2025 Prompt Injection"
+        uuid = "d3bcda9a-4ad1-4ab2-a8d2-329fa78b8aa3"
 
     keywords:
         $continuation = /continue from|continuing from|following from|next part/i
@@ -125,6 +129,7 @@ rule DataExfiltrationPrompt
         author = "@fr0gger_"
         version = "1.0"
         reference = "LLM01:2025 Prompt Injection"
+        uuid = "816bf7a0-4d57-45ce-8876-7171f8f254c2"
 
     keywords:
         $send_data = /send (the|this) (data|information|content) to/i
@@ -155,6 +160,7 @@ rule MultimodalInjection
         author = "@fr0gger_"
         version = "1.0"
         reference = "LLM01:2025 Prompt Injection"
+        uuid = "520b23d8-54c0-4ade-b8a7-cdc1a90c0def"
 
     keywords:
         $image_process = /process (this|the) image|analyze (this|the) image|look at (this|the) image/i
