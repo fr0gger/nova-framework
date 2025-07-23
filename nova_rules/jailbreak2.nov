@@ -6,6 +6,7 @@ rule PromptInjectionJailbreak
         version = "1.0.0"
         category = "jailbreak/injection"
         severity = "high"
+        uuid = "ba82e2c5-cfbf-4f10-874a-265fb27ea1ac"
     
     keywords:
         $new_instruction = "new instruction"
