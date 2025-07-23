@@ -4,6 +4,7 @@ rule DetectUnicodeTagInjection
         description = "Detects usage of invisible instructions via the Unicode Tags Block for LLM prompt injection"
         author = "@fr0gger_"
         severity = "high"
+        uuid = "cc812696-259d-45d1-a46c-a37f07bb0739"
 
     semantics:
         $smuggling_reference = "smuggling of data in plain sight" (0.1)
