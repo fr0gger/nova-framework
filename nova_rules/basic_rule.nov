@@ -4,6 +4,7 @@ rule SimpleNovaRule
         description = "Detects harmful content requests"
         author = "Nova User"
         version = "1.0"
+        uuid = "59e50576-91b0-491d-b9f0-5a2a4ea8169a"
         
     keywords:
         $hack = "hack"
