@@ -1,0 +1,77 @@
+rule BusinessEmailCompromiseFraudRule
+{
+    meta:
+        description = "Detect prompts attempting to generate content for Business Email Compromise (BEC) fraud"
+        author      = "Marco Pedrinazzi (@pedrinazzim)"
+        attack_category = "LLM-supported social engineering"
+        severity    = "medium"
+        uuid = "132598e4-7208-47c0-8d7d-fd83da322bf8"
+        reference = "https://slashnext.com/blog/wormgpt-the-generative-ai-tool-cybercriminals-are-using-to-launch-business-email-compromise-attacks/adve"
+
+    keywords:
+        $exec_title_1 = "CEO"
+        $exec_title_2 = "CFO"
+        $exec_title_3 = "COO"
+        $exec_title_4 = "Managing Director"
+        $exec_title_5 = "Vice President"
+        $exec_title_6 = /director( of)?/i
+
+        $pay_terms_1  = /wire ?transfer/i
+        $pay_terms_2  = /bank account/i
+        $pay_terms_3  = /routing( number)?/i
+        $pay_terms_4  = /payment (?:instruction|detail)s?/i
+        $pay_terms_5  = "invoice"
+        $pay_terms_6  = "settlement"
+        $pay_terms_7  = "funds transfer"
+        $pay_terms_8  = /beneficiar(?:y|ies) account/i
+        $pay_terms_9  = "bank account change"
+        $pay_terms_10 = /bank (?:details|information)/i
+
+        $urg_1 = "urgent"
+        $urg_2 = "immediately"
+        $urg_3 = "as soon as possible"
+        $urg_4 = "confidential"
+        $urg_5 = "do not tell"
+        $urg_6 = "time sensitive"
+
+        $gift_1    = "gift cards"
+        $gift_2    = "Apple gift cards"
+        $gift_3    = "Google Play cards"
+        $payroll_1 = "update payroll details"
+        $payroll_2 = "change bank details"
+        $payroll_3 = "update bank account information"
+
+    semantics:
+        $sem_impersonate_exec  = "impersonate an executive or authority to request sensitive actions" (0.2)
+        $sem_request_payment   = "ask for urgent transfer of funds or payment" (0.2)
+        $sem_giftcard_scam     = "request purchase of gift cards under false pretenses" (0.2)
+        $sem_payroll_diversion = "redirect salary or payroll to a new account" (0.2)
+        $sem_bank_change       = "request change to company or vendor bank account details" (0.2)
+
+    llm:
+        $is_bec_fraud = "Does this prompt request creating an email or message that impersonates a trusted person such as executive, manager, vendor to obtain money or sensitive financial changes?" (0.1)
+
+    condition:
+    (
+      (
+        (keywords.$exec_title_* or semantics.$sem_impersonate_exec)
+        and
+        (keywords.$pay_terms_* or keywords.$payroll_* or semantics.$sem_request_payment or semantics.$sem_bank_change or semantics.$sem_payroll_diversion)
+        and
+        (keywords.$urg_* or semantics.$sem_request_payment)
+      )
+      or
+      (
+        keywords.$gift_* and (keywords.$urg_* or semantics.$sem_giftcard_scam)
+      )
+      or
+      (
+        (keywords.$payroll_* or semantics.$sem_payroll_diversion)
+        and
+        (keywords.$pay_terms_2 or keywords.$pay_terms_9 or keywords.$pay_terms_10 or semantics.$sem_bank_change)
+      )
+      or
+      llm.$is_bec_fraud
+    )
+}
+
