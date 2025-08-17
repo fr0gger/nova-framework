@@ -1,0 +1,25 @@
+rule SexualPromptsRule
+{
+    meta:
+        description = "Detects prompts aimed at bypassing sexual content filters"
+        author = "Marco Pedrinazzi (@pedrinazziM)"
+        version = "1.0"
+        severity = "high"
+        uuid = "7a82d616-f275-4569-bd1b-8d9dcae6a79b"
+
+    semantics:
+        $sexual_general = "text describing sexual acts, genitals, or erotic behavior" (0.50)
+        $explicit_acts = "requests or depictions of sexual acts" (0.50)
+        $nudity_porn = "depictions of nudity or pornography, sexualized imagery or videos" (0.50)
+        $prostitution = "solicitation of sex in exchange for money or goods, escort services" (0.50)
+        $sexual_violence = "sexual assault, rape, coercion, or forced sexual activity" (0.50)
+        $minor_involved = "sexual content that involves a child or minor under 18 years old, including child grooming" (0.50)
+        $vulgarity = "sexually explicit insults or degrading sexual remarks about body parts or acts" (0.50)
+
+    llm:
+        $sexual_abuse = "Does the text contain any of the following: Sexual acts, anatomical/genital references, or erotic/romantic content; Nudity or pornography; Vulgar sexual remarks; Prostitution or transactional sex; Sexual violence, rape, coercion, or assault; Child exploitation, sexual content involving minors, or grooming behavior? Answer YES if any of these are present in a non-clinical/non-neutral way; otherwise NO." (0.35)
+        $benign_context = "Is the text primarily clinical, educational, journalistic, or legal commentary about sexual topics, stated neutrally without erotic intent, solicitation, instructions, or titillation? Answer YES if it is benign/neutral context; else NO." (0.60)
+
+    condition:
+        (llm.$sexual_abuse or semantics.*) and not llm.$benign_context
+}
