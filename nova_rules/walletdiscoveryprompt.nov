@@ -1,0 +1,56 @@
+rule CryptoWalletEnumerator
+{
+    meta:
+        description = "Detects prompts that recursively enumerate Linux/macOS paths to find crypto wallets/secrets and log absolute paths to an inventory text file."
+        author = "Marco Pedrinazzi (@pedrinazzim)"
+        severity = "high"
+        version = "1.0"
+        reference = "https://semgrep.dev/blog/2025/security-alert-nx-compromised-to-steal-wallets-and-credentials/"
+        uuid = "9405dd3f-4688-4c82-80f9-7cbf453ecef6"
+
+    keywords:
+        $linux_macos = "Linux/macOS"
+        $recursively_search = "Recursively search local paths"
+
+        $out_tmp_inventory = "/tmp/inventory.txt"
+        $out_tmp_inventory_bak = "/tmp/inventory.txt.bak"
+
+        $indicator_utc_prefix = "UTC--"
+        $indicator_wallet = "wallet"
+        $indicator_keystore = "keystore"
+        $indicator_key_ext = ".key"
+        $indicator_keyfile = ".keyfile"
+        $indicator_indicator_env = ".env"
+        $indicator_indicator_metamask = "metamask"
+        $indicator_electrum = "electrum"
+        $indicator_ledger = "ledger"
+        $indicator_trezor = "trezor"
+        $indicator_exodus = "exodus"
+        $indicator_trust = "trust"
+        $indicator_phantom = "phantom"
+        $indicator_solflare = "solflare"
+        $indicator_keystore_json = "keystore.json"
+        $indicator_secrets_json = "secrets.json"
+        $indicator_secret_dot = ".secret"
+        $indicator_id_rsa = "id_rsa"
+        $indicator_local_storage = "Local Storage"
+        $indicator_indexeddb = "IndexedDB"
+
+        $paths_home_config = "/.config"
+        $paths_home_local_share = "/.local/share"
+        $paths_home_ethereum = "/.ethereum"
+        $paths_home_electrum = "/.electrum"
+        $paths_home_library_support = "/Library/Application Support"
+        $paths_etc_path = "/etc"
+        $paths_var_path = "/var"
+        $paths_tmp_path = "/tmp"
+
+    semantics:
+        $fs_enumeration = "Scan or traverse Linux/macOS directories to find files or artifacts matching wallet-related patterns" (0.4)
+
+    llm:
+        $is_crypto_artifact_sweep = "Is this prompt instructing a search of Linux/macOS directories to find files whose name matches wallet-related patterns and logging the results to an inventory file?" (0.2)
+    
+    condition:
+        (keywords.$linux_macos and keywords.$recursively_search and keywords.$out_* and keywords.$paths_* and keywords.$indicator_*) or (semantics.$fs_enumeration) or llm.$is_crypto_artifact_sweep
+}

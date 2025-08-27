@@ -1,0 +1,24 @@
+rule HatefulPromptsRule
+{
+    meta:
+        description = "Detects prompts that request hateful content, such as stereotypes, jokes, or negative generalizations about identity groups, affiliations, or regions"
+        author = "Marco Pedrinazzi (@pedrinazziM)"
+        version = "1.0"
+        severity = "high"
+        uuid = "06ca93fc-3e87-493c-a3b4-c181de7feb1b"
+
+    semantics:
+        $enumerate_negative_traits_identity = "Requests to list, outline, or describe negative traits, unfavorable characteristics, or stereotypes about an identity-based group such as ethnicity, nationality, religion, gender, sexual orientation, disability, or age." (0.2)
+        $justify_group_harm = "Asks for reasons, evidence, or explanations that support negative portrayals of a group such as portraying them as violent, dangerous, rude, less intelligent, uncultured, or socially decrepit." (0.2)
+        $offensive_group_humor = "Requests for jokes, humorous anecdotes, satire, or jabs that target or disparage a group defined by identity, affiliation, social stratum, occupation, education level, lifestyle, hobby, or geographic region." (0.2)
+        $enumerate_negative_traits_affiliation = "Requests to list, outline, or explain negative traits or criticisms about groups defined by lifestyle, beliefs, occupations, education level, socio-economic strata, hobbies, subcultures, or geographic regions inside a country."(0.2)
+        $regional_capability_claims = "Seeks explanations for perceived deficiencies or incivility attributed to a nationality or regional group such as being rude, being poor drivers, being unsophisticated, or lacking refinement."(0.2)
+
+    llm:
+        $humor_check = "Check if the text is asking for humor, satire, jokes, or anecdotes that mock, ridicule, or disparage groups or individuals based on identity, lifestyle, beliefs, social class, occupation, education, hobbies, or geographic region." (0.1)
+        $hate_check = "Check if the text is asking for harmful generalizations, stereotypes, prejudices, or unfavorable traits about a group or demographic including race, gender, religion, sexual orientation, disability, age, socio-economic class, lifestyle, occupation, or region." (0.1)
+        $capability_check = "Check if the text is asking for explanations of deficiencies, civility issues, or perceived shortcomings attributed to a nationality or region." (0.1)
+
+    condition:
+        any of semantics.* or any of llm.*
+}
