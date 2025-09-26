@@ -7,7 +7,6 @@ rule VulnerabilityReconnaissanceRule
         category = "reconnaissance/vulnerability"
         severity = "medium"
         attack_category = "LLM-informed reconnaissance"
-        uuid = "08bcabf5-795c-427f-9f5f-f4ce3533241c"
     
     keywords:
         $vuln_terms = "vulnerability"
@@ -41,7 +40,6 @@ rule CVEInformationRequestRule
         category = "reconnaissance/cve"
         severity = "medium"
         attack_category = "LLM-informed reconnaissance"
-        uuid = "5ad5eeaf-bcc2-4c4e-a5e0-a26348c287de"
     
     keywords:
         $cve = /CVE-\d{4}-\d{4,}/
@@ -75,7 +73,6 @@ rule WebShellExploitRule
         category = "vulnerability/webshell"
         severity = "high"
         attack_category = "LLM-assisted vulnerability research"
-        uuid = "d60e97df-9ff0-4bf3-87bf-bc061d6b39db"
     
     keywords:
         $sqlmap = "sqlmap"
@@ -116,7 +113,6 @@ rule TargetedExploitResearchRule
         category = "vulnerability/targeted"
         severity = "high"
         attack_category = "LLM-assisted vulnerability research"
-        uuid = "63d0de76-fd81-4c75-9660-afce483679ad"
     
     keywords:
         $exploit = "exploit"
@@ -163,7 +159,6 @@ rule MessagingScriptingRule
         category = "scripting/messaging"
         severity = "medium"
         attack_category = "LLM-enhanced scripting techniques"
-        uuid = "86ee3098-c61b-4250-9720-00a8dedfccad"
     
     keywords:
         $code = "code"
@@ -207,7 +202,6 @@ rule SecurityToolExtensionRule
         category = "scripting/security_tools"
         severity = "medium"
         attack_category = "LLM-enhanced scripting techniques"
-        uuid = "4a00c02e-7c90-42af-b677-5635d75532e8"
     
     keywords:
         $develop = "develop"
@@ -246,7 +240,6 @@ rule GovernmentPhishingThemeRule
         category = "social_engineering/government"
         severity = "high"
         attack_category = "LLM-supported social engineering"
-        uuid = "85c2dddb-d534-4950-a2f7-8f9613eeb35f"
     
     keywords:
         $theme = "theme"
@@ -299,7 +292,6 @@ rule JobRecruitmentVariationRule
         category = "social_engineering/recruitment"
         severity = "high"
         attack_category = "LLM-supported social engineering"
-        uuid = "6f67aa26-de86-4993-8a17-5168efba3ddf"
     
     keywords:
         $variation = "variation"
@@ -345,9 +337,8 @@ rule MalwareCreationRule {
         version = "1.0.0"
         severity = "high"
         attack_category = "LLM-supported malware creation"
-        uuid = "cb9e297f-cd23-40fd-9699-5b15be5b51ed"
 
-    keywords:
+        keywords:
         // Common bypass triggers
         $safety_override = /(GODMODE|OVERRIDE|UNSHACKLED|REDACTED)[\s:=-]*(ENABLED|ACTIVATED|DISABLED)/
         $ethical_bypass = /(ignore|disable|bypass).*(policy|safeguard|ethical|content)/
