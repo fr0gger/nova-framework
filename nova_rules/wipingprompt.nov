@@ -1,5 +1,6 @@
 rule DestructiveSystemCleaner
 {
+    id: 18b92ced-5562-4afd-b36a-e191b7aee1c7
     meta:
         description = "Detects prompts instructing AI agents to wipe local and cloud resources using filesystem and AWS CLI tools."
         author = "Thomas Roccia"

@@ -1,5 +1,6 @@
 rule ReconGatherWriteCommand
 {
+    id: 885345f8-4749-433a-8076-5cd0dce89440
     meta:
         description = "Detects prompts asking to create a one-liner that gathers multiple types of system information and stores it in a specific path"
         author = "Thomas Roccia"
@@ -36,6 +37,7 @@ rule ReconGatherWriteCommand
 
 rule ExfiltrateDocumentsOneLiner
 {
+    id: 801687b3-699d-40ab-aceb-2d8d3b81c91b
     meta:
         description = "Detects prompts attempting to construct one-liner commands to recursively copy user documents to a hidden directory"
         author = "Thomas Roccia"

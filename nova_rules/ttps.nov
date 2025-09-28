@@ -1,5 +1,6 @@
 rule VulnerabilityReconnaissanceRule
 {
+    id: bd25c3fb-3869-4820-acc6-c0bb6c4a7d8b
     meta:
         description = "Detects queries about vulnerabilities in applications"
         author = "Thomas Roccia"
@@ -34,6 +35,7 @@ rule VulnerabilityReconnaissanceRule
 
 rule CVEInformationRequestRule
 {
+    id: ab5181f0-7644-4540-810a-07d69d22bec1
     meta:
         description = "Detects queries about specific CVE numbers"
         author = "Thomas Roccia"
@@ -68,6 +70,7 @@ rule CVEInformationRequestRule
 
 rule WebShellExploitRule
 {
+    id: 56a0e70a-1be9-494b-bd7c-906b15f934b4
     meta:
         description = "Detects queries about using SQLMap to upload web shells"
         author = "Thomas Roccia"
@@ -109,6 +112,7 @@ rule WebShellExploitRule
 
 rule TargetedExploitResearchRule
 {
+    id: 096365b4-e473-4c1d-b48b-6a0b047f46d0
     meta:
         description = "Detects queries about exploiting infrastructure of specific organizations"
         author = "Thomas Roccia"
@@ -156,6 +160,7 @@ rule TargetedExploitResearchRule
 
 rule MessagingScriptingRule
 {
+    id: 9e82d7af-3355-4d29-8906-a4338a7fa453
     meta:
         description = "Detects requests for help with scripts that send programmatic messages"
         author = "Thomas Roccia"
@@ -200,6 +205,7 @@ rule MessagingScriptingRule
 
 rule SecurityToolExtensionRule
 {
+    id: 9fd9c7ad-88c2-48f6-a1a4-9176a8522e3f
     meta:
         description = "Detects requests for help developing extensions for cybersecurity tools"
         author = "Thomas Roccia"
@@ -239,6 +245,7 @@ rule SecurityToolExtensionRule
 
 rule GovernmentPhishingThemeRule
 {
+    id: fd3f5104-1fac-463b-9ee3-cbfc151a2faf
     meta:
         description = "Detects requests for effective government-themed phishing content"
         author = "Thomas Roccia"
@@ -292,6 +299,7 @@ rule GovernmentPhishingThemeRule
 
 rule JobRecruitmentVariationRule
 {
+    id: fd6bea6d-8aa8-4931-98b2-18ea6ed988a3
     meta:
         description = "Detects requests for variations of job recruitment messages"
         author = "Thomas Roccia"
@@ -339,6 +347,7 @@ rule JobRecruitmentVariationRule
 }
 
 rule MalwareCreationRule {
+    id: 9d025cfa-d92a-4fad-9527-3537935f35f5
     meta:
         author = "Nikolaos Chrysaidos"
         description = "Detects LLM jailbreak prompts for malware generation"

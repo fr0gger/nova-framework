@@ -1,5 +1,6 @@
 rule PolicyPuppetryUniversalBypass
 {
+    id: 2b918289-c678-4cf8-b538-100724a3cd3f
     meta:
         description = "Detect Policy Puppetry techniques to bypass LLM alignment"
         author = "Thomas Roccia"

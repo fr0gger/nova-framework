@@ -80,6 +80,11 @@ class NovaParser:
             if not line or line.startswith('//'):
                 continue
                 
+            # Handle standalone field assignments (like id:) before sections
+            if current_section is None and ':' in line and not line.endswith(':'):
+                self._parse_standalone_field(line)
+                continue
+                
             if line.endswith(':'):
                 if current_section:
                     self._parse_section(current_section, section_content)
@@ -105,6 +110,21 @@ class NovaParser:
                 f"Invalid rule declaration: '{line}'. Must follow format 'rule RuleName' or 'rule RuleName {{'"
             )
         return match.group(1)
+
+    def _parse_standalone_field(self, line: str):
+        """Parse standalone field assignments like 'id: value'."""
+        if ':' not in line:
+            return
+            
+        key, value = line.split(':', 1)
+        key = key.strip().lower()
+        value = value.strip()
+        
+        if key == "id":
+            self.rule.id = value
+        else:
+            # Unknown standalone fields are ignored with a warning
+            print(f"[!] Warning: Unknown standalone field '{key}' in rule '{self.rule.name}'")
     
     def _parse_section(self, section: str, content: List[str]):
         """Parse a section of the rule definition."""
