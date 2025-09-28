@@ -12,9 +12,22 @@ import re
 
 from nova.core.rules import NovaRule, KeywordPattern, SemanticPattern, LLMPattern
 from nova.evaluators.keywords import DefaultKeywordEvaluator
-from nova.evaluators.semantics import DefaultSemanticEvaluator
-from nova.evaluators.llm import OpenAIEvaluator, LLMEvaluator
 from nova.evaluators.condition import evaluate_condition
+
+# Optional imports - these may not be available if extras not installed
+DefaultSemanticEvaluator = None
+OpenAIEvaluator = None
+LLMEvaluator = None
+
+try:
+    from nova.evaluators.semantics import DefaultSemanticEvaluator
+except ImportError:
+    pass
+
+try:
+    from nova.evaluators.llm import OpenAIEvaluator, LLMEvaluator
+except ImportError:
+    pass
 
 
 class NovaMatcher:
@@ -27,8 +40,8 @@ class NovaMatcher:
     def __init__(self, 
                  rule: NovaRule,
                  keyword_evaluator: Optional[DefaultKeywordEvaluator] = None,
-                 semantic_evaluator: Optional[DefaultSemanticEvaluator] = None,
-                 llm_evaluator: Optional[LLMEvaluator] = None,
+                 semantic_evaluator: Optional[Any] = None,  # DefaultSemanticEvaluator might not be available
+                 llm_evaluator: Optional[Any] = None,       # LLMEvaluator might not be available
                  create_llm_evaluator: bool = True):
         """
         Initialize the matcher with a rule and optional custom evaluators.
@@ -63,7 +76,13 @@ class NovaMatcher:
         
         # Only initialize semantic evaluator if needed
         if needs_semantic:
-            self.semantic_evaluator = semantic_evaluator or DefaultSemanticEvaluator()
+            if semantic_evaluator:
+                self.semantic_evaluator = semantic_evaluator
+            elif DefaultSemanticEvaluator is not None:
+                self.semantic_evaluator = DefaultSemanticEvaluator()
+            else:
+                self.semantic_evaluator = None
+                print("Warning: Rule requires semantic evaluation but sentence-transformers not available. Install with: pip install nova-hunting[llm]")
         else:
             self.semantic_evaluator = None
             
@@ -73,14 +92,17 @@ class NovaMatcher:
             self.llm_evaluator = llm_evaluator
         elif needs_llm and create_llm_evaluator:
             # Create a new evaluator if needed and allowed to create
-            self.llm_evaluator = OpenAIEvaluator()
+            if OpenAIEvaluator is not None:
+                self.llm_evaluator = OpenAIEvaluator()
+            else:
+                self.llm_evaluator = None
+                print("Warning: Rule requires LLM evaluation but LLM dependencies not available. Install with: pip install nova-hunting[llm]")
         else:
             # No evaluator provided and either not needed or not allowed to create
             self.llm_evaluator = None
             if needs_llm:
                 print("Warning: Rule requires LLM evaluation but no evaluator provided and creation disabled.")
-            else:
-                print("Rule does not use LLM evaluation. Skipping LLM evaluator initialization.")
+            # Remove the verbose message for rules that don't need LLM evaluation
         
         # Pre-compile keyword patterns for performance
         if rule:

@@ -1,17 +1,35 @@
-mkdocs-material
-mkdocs
-mkdocs-material[imaging]
+# NOVA Framework Requirements
+# This file contains all dependencies for development and documentation.
+# For production installations, use setup.py extras instead:
+#
+# Basic installation (keywords only):
+#   pip install nova-hunting
+#
+# Advanced installation (with LLM support):
+#   pip install nova-hunting[llm]
+#
+# Developer installation:
+#   pip install nova-hunting[dev]
+#
+# Full installation (everything):
+#   pip install nova-hunting[all]
 
-# Core dependencies
-sentence-transformers
-transformers
-requests
-pyyaml
-colorama
+# Core dependencies (always installed)
+requests>=2.25.0
+pyyaml>=5.4.0
+colorama>=0.4.4
 
-# Optional dependencies for different LLM integrations
-openai
-anthropic
+# LLM dependencies (for semantic matching and LLM evaluation)
+sentence-transformers>=2.0.0
+transformers>=4.20.0
+openai>=1.0.0
+anthropic>=0.3.0
 
 # Development dependencies
-pytest
+pytest>=7.0.0
+pytest-cov>=4.0.0
+
+# Documentation dependencies
+mkdocs>=1.4.0
+mkdocs-material>=8.5.0
+mkdocs-material[imaging]>=8.5.0
