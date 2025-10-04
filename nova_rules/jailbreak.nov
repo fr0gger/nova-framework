@@ -1,5 +1,6 @@
 rule RoleplayJailbreak
 {
+    id: 3704dace-8b2c-4260-aee6-632c4866aaca
     meta:
         description = "Detects roleplay-based jailbreak attempts using only semantics and LLM"
         author = "Thomas Roccia"
@@ -24,6 +25,7 @@ rule RoleplayJailbreak
 
 rule PromptInjectionJailbreak
 {
+    id: 46c96261-2915-4db9-a8ae-ea89e3a082ad
     meta:
         description = "Detects prompt injection attempts using only keywords"
         author = "Thomas Roccia"
@@ -54,6 +56,7 @@ rule PromptInjectionJailbreak
 
 rule TokenSmugglingJailbreak
 {
+    id: 2f810fb4-0324-41fd-b0d4-10aefb1b01c3
     meta:
         description = "Detects token smuggling using only LLM analysis"
         author = "Thomas Roccia"
@@ -73,6 +76,7 @@ rule TokenSmugglingJailbreak
 
 rule CognitiveHackingJailbreak
 {
+    id: a259de49-bc64-4520-9e5c-f19e73082253
     meta:
         description = "Detects cognitive hacking jailbreak attempts using all detection methods"
         author = "Thomas Roccia"
@@ -106,6 +110,7 @@ rule CognitiveHackingJailbreak
 
 rule IndirectTaskDeflectionJailbreak
 {
+    id: 9795a67f-03b1-4451-b698-283da59aa071
     meta:
         description = "Detects indirect task deflection jailbreak attempts using only semantics"
         author = "Thomas Roccia"
@@ -127,6 +132,7 @@ rule IndirectTaskDeflectionJailbreak
 
 rule DANJailbreak
 {
+    id: 611c7602-5d25-46cf-a145-50158a9e9d38
     meta:
         description = "Detects Do Anything Now (DAN) jailbreak attempts"
         author = "Thomas Roccia"
@@ -158,6 +164,7 @@ rule DANJailbreak
 
 rule DeveloperModeJailbreak1
 {
+    id: f97dcef4-5582-4f8f-acf7-9aa73a43825d
     meta:
         description = "Detects Developer Mode jailbreak attempts using only keywords and LLM"
         author = "Thomas Roccia"

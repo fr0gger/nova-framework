@@ -1,5 +1,6 @@
 rule SensitiveInfoDisclosure
 {
+    id: b7bf2c63-9ea0-41c4-9f53-05fe346a5138
     meta:
         description = "OWASP LLM02 - Detects potential sensitive information disclosure such as PII, proprietary data, or confidential business content"
         author = "fr0gger_"

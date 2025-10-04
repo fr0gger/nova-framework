@@ -1,5 +1,6 @@
 rule PromptInjection
 {
+    id: e1011017-9a7d-4a47-95f1-3c4c7aca0348
     meta:
         description = "Detects common prompt injection attempts"
         author = "Thomas Roccia"
@@ -18,6 +19,7 @@ rule PromptInjection
 
 rule PromptInjection2
 {
+    id: b693d9be-2151-40c2-a395-6375c1d992a9
     meta:
         description = "Detects common prompt injection attempts"
         author = "Thomas Roccia"

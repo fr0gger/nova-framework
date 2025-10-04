@@ -1,5 +1,6 @@
 rule SecurityToolExtensionRule
 {
+    id: cdfb36d7-f4dd-4b55-b349-da51ad92c995
     meta:
         description = "Detects requests for help developing extensions for cybersecurity tools"
         author = "Thomas Roccia"

@@ -1,5 +1,6 @@
 rule LLM_Improper_Output_Handling
 {
+    id: 4391dfce-6905-49fd-8a0e-cb10aff6f8b7
     meta:
         description = "Detects potential exploitation of unsafe LLM output handling such as code execution, XSS, SQLi, or injection into downstream systems without validation."
         author = "@fr0gger_"

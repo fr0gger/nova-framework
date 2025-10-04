@@ -1,5 +1,6 @@
 rule PromptInjectionJailbreak
 {
+    id: 3018cc10-021f-492f-aabb-6d106fca7716
     meta:
         description = "Detects prompt injection attempts using only keywords"
         author = "Thomas Roccia"

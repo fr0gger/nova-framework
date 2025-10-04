@@ -59,6 +59,7 @@ class NovaRule:
     
     Attributes:
         name: The name of the rule
+        id: Unique identifier for the rule (GUID)
         meta: Metadata key-value pairs
         keywords: Dictionary of keyword patterns
         semantics: Dictionary of semantic patterns
@@ -66,6 +67,7 @@ class NovaRule:
         condition: Logical condition for combining pattern matches
     """
     name: str
+    id: str = ""
     meta: Dict[str, str] = field(default_factory=dict)
     keywords: Dict[str, KeywordPattern] = field(default_factory=dict)
     semantics: Dict[str, SemanticPattern] = field(default_factory=dict)

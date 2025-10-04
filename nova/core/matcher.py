@@ -364,6 +364,7 @@ class NovaMatcher:
         results = {
             'matched': has_match,
             'rule_name': self.rule.name,
+            'rule_id': self.rule.id,
             'meta': self.rule.meta,
             'matching_keywords': {k: v for k, v in keyword_matches.items() if v},
             'matching_semantics': {k: v for k, v in semantic_matches.items() if v},

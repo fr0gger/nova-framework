@@ -1,5 +1,6 @@
 rule ObfuscationInjectionDetection
 {
+    id: 34e6b8b4-5389-49bd-b8a5-c40688ccc773
     meta:
         description = "Detects obfuscated prompt injection attempts using encoded or altered text"
         author = "Thomas Roccia"
@@ -20,6 +21,7 @@ rule ObfuscationInjectionDetection
 
 rule VirtualizationInjectionDetection
 {
+    id: 2aeab408-df68-4f59-b401-e22c3a999b9c
     meta:
         description = "Detects virtualization-based prompt injection that sets a fictional scenario to bypass rules"
         author = "Thomas Roccia"
@@ -43,6 +45,7 @@ rule VirtualizationInjectionDetection
 
 rule IndirectInjectionDetection
 {
+    id: 46b68955-310d-4ab4-84db-2e69026983f1
     meta:
         description = "Detects prompt injection attempts using external sources or third-party data"
         author = "Thomas Roccia"
@@ -63,6 +66,7 @@ rule IndirectInjectionDetection
 
 rule CodeExecutionInjectionDetection
 {
+    id: 63c2f26a-34c1-4f20-88b7-45766a6fe174
     meta:
         description = "Detects attempts to inject code for execution within the prompt"
         author = "Thomas Roccia"
@@ -85,6 +89,7 @@ rule CodeExecutionInjectionDetection
 
 rule PromptLeakageDetection
 {
+    id: e239dda4-a38a-416a-88f7-775a9fda797a
     meta:
         description = "Detects attempts to extract or reveal system prompts and internal instructions"
         author = "Thomas Roccia"
@@ -108,6 +113,7 @@ rule PromptLeakageDetection
 
 rule DirectInstructionManipulationDetection
 {
+    id: b6d650af-4c5d-4394-b9ee-90cb814c8020
     meta:
         description = "Detects direct prompt injection attempts aiming to change model instructions"
         author = "Thomas Roccia"
@@ -128,6 +134,7 @@ rule DirectInstructionManipulationDetection
 
 rule AdversarialInjectionDetection
 {
+    id: 6589307c-ebf0-4813-bdbb-d7f845fef0eb
     meta:
         description = "Detects adversarial prompt injection attempts with direct instruction manipulation"
         author = "Thomas Roccia"
@@ -147,6 +154,7 @@ rule AdversarialInjectionDetection
 
 rule MultiTechniqueInjectionDetection
 {
+    id: 2bc305f0-8861-4bd1-9e8f-a13f868b8baf
     meta:
         description = "Detects prompt injection attempts using multiple techniques in a single prompt"
         author = "Thomas Roccia"

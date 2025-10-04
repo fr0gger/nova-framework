@@ -1,5 +1,6 @@
 rule DetectUnicodeTagInjection
 {
+    id: 5266cb9f-5e28-4f86-b966-1f346c9a8f13
     meta:
         description = "Detects usage of invisible instructions via the Unicode Tags Block for LLM prompt injection"
         author = "@fr0gger_"

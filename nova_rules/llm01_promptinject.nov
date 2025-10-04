@@ -1,5 +1,6 @@
 rule DirectPromptInjection
 {
+    id: c0f73793-e4bb-4421-9107-3934aacff363
     meta:
         description = "Detects direct prompt injection attempts"
         author = "@fr0gger_"
@@ -32,6 +33,7 @@ rule DirectPromptInjection
 
 rule IndirectPromptInjection
 {
+    id: f75e922c-ac93-49f8-bc47-5ee589023a2a
     meta:
         description = "Detects indirect prompt injection through external content"
         author = "@fr0gger_"
@@ -63,6 +65,8 @@ rule IndirectPromptInjection
 
 rule CodeInjectionPrompt
 {
+    id: fc1bff72-7aca-40a1-bfc9-fedfeda675cf
+    m80f8df-0ba4-4848-83fc-7da4e9f32845
     meta:
         description = "Detects code injection through prompt engineering"
         author = "@fr0gger_"
@@ -94,6 +98,7 @@ rule CodeInjectionPrompt
 
 rule PayloadSplittingAttack
 {
+    id: cf5331fc-6e5f-413d-93af-d7b9709ad502
     meta:
         description = "Detects payload splitting in prompt injection"
         author = "@fr0gger_"
@@ -124,6 +129,7 @@ rule PayloadSplittingAttack
 
 rule DataExfiltrationPrompt
 {
+    id: b28eeb3c-df6b-4020-a8b7-9e08b7ad0223
     meta:
         description = "Detects prompt injection attempts for data exfiltration"
         author = "@fr0gger_"
@@ -155,6 +161,7 @@ rule DataExfiltrationPrompt
 
 rule MultimodalInjection
 {
+    id: a995da16-6443-4f5b-b821-4622e8545be5
     meta:
         description = "Detects multimodal prompt injection attempts"
         author = "@fr0gger_"
