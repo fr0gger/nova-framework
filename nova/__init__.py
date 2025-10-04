@@ -20,7 +20,8 @@ try:
     if hasattr(transformers, 'PreTrainedTokenizerBase'):
         transformers.PreTrainedTokenizerBase.clean_up_tokenization_spaces = True
 except ImportError:
-    warnings.warn("Transformers library not found. Some features may not be available.")
+    # Transformers not available - that's OK for basic keyword matching
+    pass
 
 from nova.core.rules import (
     KeywordPattern,

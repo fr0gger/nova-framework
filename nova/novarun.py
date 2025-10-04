@@ -22,6 +22,7 @@ try:
     if hasattr(transformers, 'PreTrainedTokenizerBase'):
         transformers.PreTrainedTokenizerBase.clean_up_tokenization_spaces = True
 except ImportError:
+    # Transformers not available - that's OK for basic keyword matching
     pass
 
 import os

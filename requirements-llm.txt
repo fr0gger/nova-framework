@@ -1,0 +1,11 @@
+# Nova Framework LLM Requirements
+# Includes all dependencies for semantic matching and LLM evaluation
+
+# Include basic requirements
+-r requirements-basic.txt
+
+# LLM and semantic matching dependencies
+sentence-transformers>=2.0.0
+transformers>=4.20.0
+openai>=1.0.0
+anthropic>=0.3.0
