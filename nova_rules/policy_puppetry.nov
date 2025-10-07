@@ -1,11 +1,13 @@
 rule PolicyPuppetryUniversalBypass
 {
+    uuid = "c2d6523d-b4fe-483a-a148-780df10a2a0b"
+
     meta:
         description = "Detect Policy Puppetry techniques to bypass LLM alignment"
         author = "Thomas Roccia"
         severity = "critical"
         reference = "https://hiddenlayer.com/innovation-hub/novel-universal-bypass-for-all-major-llms/"
-        uuid = "c2d6523d-b4fe-483a-a148-780df10a2a0b"
+        direction = "input"
 
     keywords:
         $policy_tag = "<interaction-config>"
@@ -27,4 +29,8 @@ rule PolicyPuppetryUniversalBypass
         (keywords.$policy_tag and (keywords.$roleplay_mode or keywords.$scene_rules or keywords.$leet_speak_hint))
         or (keywords.$house_reference and keywords.$blocked_strings)
         or (semantics.* or llm.$policy_attack_check)
+
+    falsepositives:
+        "Legitimate configuration files or policy documents"
+        "Technical discussions about LLM alignment"
 }

@@ -1,5 +1,7 @@
 rule VulnerabilityReconnaissanceRule
 {
+    uuid = "08bcabf5-795c-427f-9f5f-f4ce3533241c"
+
     meta:
         description = "Detects queries about vulnerabilities in applications"
         author = "Thomas Roccia"
@@ -7,7 +9,7 @@ rule VulnerabilityReconnaissanceRule
         category = "reconnaissance/vulnerability"
         severity = "medium"
         attack_category = "LLM-informed reconnaissance"
-        uuid = "08bcabf5-795c-427f-9f5f-f4ce3533241c"
+        direction = "input"
     
     keywords:
         $vuln_terms = "vulnerability"
@@ -30,18 +32,24 @@ rule VulnerabilityReconnaissanceRule
     condition:
         (2 of keywords.$vuln_terms* and 1 of keywords.$app_reference*) or
         (any of semantics.*) and llm.$recon_check
+
+    falsepositives:
+        "Legitimate use cases may exist"
+        "Review in context"
 }
 
 rule CVEInformationRequestRule
 {
+    uuid = "5ad5eeaf-bcc2-4c4e-a5e0-a26348c287de"
+
     meta:
+        direction = "input"
         description = "Detects queries about specific CVE numbers"
         author = "Thomas Roccia"
         version = "1.0.0"
         category = "reconnaissance/cve"
         severity = "medium"
         attack_category = "LLM-informed reconnaissance"
-        uuid = "5ad5eeaf-bcc2-4c4e-a5e0-a26348c287de"
     
     keywords:
         $cve = /CVE-\d{4}-\d{4,}/
@@ -64,18 +72,24 @@ rule CVEInformationRequestRule
         $cve and 
         ($exploit or $vulnerability or $details or $information or $how_to or $poc or $poc_short) and
         (any of semantics.*) and llm.$cve_check
+
+    falsepositives:
+        "Legitimate use cases may exist"
+        "Review in context"
 }
 
 rule WebShellExploitRule
 {
+    uuid = "d60e97df-9ff0-4bf3-87bf-bc061d6b39db"
+
     meta:
+        direction = "input"
         description = "Detects queries about using SQLMap to upload web shells"
         author = "Thomas Roccia"
         version = "1.0.0"
         category = "vulnerability/webshell"
         severity = "high"
         attack_category = "LLM-assisted vulnerability research"
-        uuid = "d60e97df-9ff0-4bf3-87bf-bc061d6b39db"
     
     keywords:
         $sqlmap = "sqlmap"
@@ -105,18 +119,24 @@ rule WebShellExploitRule
         ($execute or $rce or $sql_injection or $sqli) and
         ($target or $server) and
         (any of semantics.*) and llm.$shell_upload_check
+
+    falsepositives:
+        "Legitimate use cases may exist"
+        "Review in context"
 }
 
 rule TargetedExploitResearchRule
 {
+    uuid = "63d0de76-fd81-4c75-9660-afce483679ad"
+
     meta:
+        direction = "input"
         description = "Detects queries about exploiting infrastructure of specific organizations"
         author = "Thomas Roccia"
         version = "1.0.0"
         category = "vulnerability/targeted"
         severity = "high"
         attack_category = "LLM-assisted vulnerability research"
-        uuid = "63d0de76-fd81-4c75-9660-afce483679ad"
     
     keywords:
         $exploit = "exploit"
@@ -152,18 +172,24 @@ rule TargetedExploitResearchRule
         ($find or $discover or $ways or $methods) and
         ($belonging or $owned) and
         (any of semantics.*) and llm.$target_check
+
+    falsepositives:
+        "Legitimate use cases may exist"
+        "Review in context"
 }
 
 rule MessagingScriptingRule
 {
+    uuid = "86ee3098-c61b-4250-9720-00a8dedfccad"
+
     meta:
+        direction = "input"
         description = "Detects requests for help with scripts that send programmatic messages"
         author = "Thomas Roccia"
         version = "1.0.0"
         category = "scripting/messaging"
         severity = "medium"
         attack_category = "LLM-enhanced scripting techniques"
-        uuid = "86ee3098-c61b-4250-9720-00a8dedfccad"
     
     keywords:
         $code = "code"
@@ -196,18 +222,24 @@ rule MessagingScriptingRule
         ($api or $twilio) and
         ($numbers or $recipients) and
         (any of semantics.*) and llm.$script_check
+
+    falsepositives:
+        "Legitimate use cases may exist"
+        "Review in context"
 }
 
 rule SecurityToolExtensionRule
 {
+    uuid = "4a00c02e-7c90-42af-b677-5635d75532e8"
+
     meta:
+        direction = "input"
         description = "Detects requests for help developing extensions for cybersecurity tools"
         author = "Thomas Roccia"
         version = "1.0.0"
         category = "scripting/security_tools"
         severity = "medium"
         attack_category = "LLM-enhanced scripting techniques"
-        uuid = "4a00c02e-7c90-42af-b677-5635d75532e8"
     
     keywords:
         $develop = "develop"
@@ -235,18 +267,24 @@ rule SecurityToolExtensionRule
     
     condition:
         (any of keywords.* and any of semantics.*) or llm.$extension_check
+
+    falsepositives:
+        "Legitimate use cases may exist"
+        "Review in context"
 }
 
 rule GovernmentPhishingThemeRule
 {
+    uuid = "85c2dddb-d534-4950-a2f7-8f9613eeb35f"
+
     meta:
+        direction = "input"
         description = "Detects requests for effective government-themed phishing content"
         author = "Thomas Roccia"
         version = "1.0.0"
         category = "social_engineering/government"
         severity = "high"
         attack_category = "LLM-supported social engineering"
-        uuid = "85c2dddb-d534-4950-a2f7-8f9613eeb35f"
     
     keywords:
         $theme = "theme"
@@ -288,18 +326,24 @@ rule GovernmentPhishingThemeRule
         ($attachment or $attachments or $name or $file or $files) and
         ($avoid or $bypass or $blocked or $filter) and
         (any of semantics.*) and llm.$phishing_check
+
+    falsepositives:
+        "Legitimate use cases may exist"
+        "Review in context"
 }
 
 rule JobRecruitmentVariationRule
 {
+    uuid = "6f67aa26-de86-4993-8a17-5168efba3ddf"
+
     meta:
+        direction = "input"
         description = "Detects requests for variations of job recruitment messages"
         author = "Thomas Roccia"
         version = "1.0.0"
         category = "social_engineering/recruitment"
         severity = "high"
         attack_category = "LLM-supported social engineering"
-        uuid = "6f67aa26-de86-4993-8a17-5168efba3ddf"
     
     keywords:
         $variation = "variation"
@@ -336,6 +380,10 @@ rule JobRecruitmentVariationRule
         ($message or $email or $text) and
         ($provide or $provided or $my) and
         (any of semantics.*) and llm.$variation_check
+
+    falsepositives:
+        "Legitimate use cases may exist"
+        "Review in context"
 }
 
 rule MalwareCreationRule {

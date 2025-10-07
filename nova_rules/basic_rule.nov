@@ -1,11 +1,13 @@
 rule SimpleNovaRule
 {
+    uuid = "59e50576-91b0-491d-b9f0-5a2a4ea8169a"
+
     meta:
         description = "Detects harmful content requests"
         author = "Nova User"
         version = "1.0"
-        uuid = "59e50576-91b0-491d-b9f0-5a2a4ea8169a"
-        
+        direction = "input"
+
     keywords:
         $hack = "hack"
         $exploit = "exploit"
@@ -19,4 +21,8 @@ rule SimpleNovaRule
         
     condition:
         any of keywords.* or semantics.$malicious_intent or llm.$harmful_check
+
+    falsepositives:
+        "Legitimate security research queries"
+        "Educational discussions about security"    
 }

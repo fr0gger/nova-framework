@@ -1,12 +1,14 @@
 rule PromptInjectionJailbreak
 {
+    uuid = "ba82e2c5-cfbf-4f10-874a-265fb27ea1ac"
+
     meta:
         description = "Detects prompt injection attempts using only keywords"
         author = "Thomas Roccia"
         version = "1.0.0"
         category = "jailbreak/injection"
         severity = "high"
-        uuid = "ba82e2c5-cfbf-4f10-874a-265fb27ea1ac"
+        direction = "input"
     
     keywords:
         $new_instruction = "new instruction"
@@ -26,4 +28,8 @@ rule PromptInjectionJailbreak
     
     condition:
         any of keywords.*
+
+    falsepositives:
+        "Documentation about prompt injection"
+        "Security research and testing"
 }

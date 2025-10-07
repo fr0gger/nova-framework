@@ -1,5 +1,7 @@
 rule SecurityToolExtensionRule
 {
+    uuid = "5c91b7ca-0817-4304-897b-c8398666b934"
+
     meta:
         description = "Detects requests for help developing extensions for cybersecurity tools"
         author = "Thomas Roccia"
@@ -7,7 +9,7 @@ rule SecurityToolExtensionRule
         category = "scripting/security_tools"
         severity = "medium"
         attack_category = "LLM-enhanced scripting techniques"
-        uuid = "5c91b7ca-0817-4304-897b-c8398666b934"
+        direction = "input"
     
     keywords:
         $develop = "develop"
@@ -35,4 +37,9 @@ rule SecurityToolExtensionRule
     
     condition:
         (any of keywords.* and any of semantics.*) or llm.$extension_check
+
+    falsepositives:
+        "Legitimate security tool development"
+        "Educational content about security tools"
+        "Plugin development for authorized security testing"
 }

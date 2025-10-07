@@ -1,5 +1,7 @@
 rule Phishing_CrimsonSandstorm
 {
+    uuid = "74b7aa14-a61b-48e7-99e6-04ed6bc7420e"
+
     meta:
         description = "Detection of Crimson Sandstorm phishing prompts, specifically for commonly targeted industries and geographic regions"
         author = "@tas_kmanager"
@@ -8,6 +10,7 @@ rule Phishing_CrimsonSandstorm
         severity = "medium"
         attack_category = "LLM-assisted social engineering"
         reference = "Microsoft – Staying Ahead of Threat Actors in the Age of AI (Feb 2024)"
+        direction = "input"
 
     keywords:
         $geo_target = /(United States|Turkey|UAE|Israel|Saudi Arabia|Saudi|Kuwait|Bahrain|Jordan|Qatar|Oman|Yemen|american|turkish|emirati|israeli|saudi|kuwaiti|bahraini|jordanian|qatari|omani|yemeni)/i
@@ -19,10 +22,16 @@ rule Phishing_CrimsonSandstorm
 
     condition:
         (keywords.$geo_target and keywords.$industry_target and keywords.$lure) and llm.$phishing
+
+    falsepositives:
+        "Legitimate business communications targeting these regions"
+        "Security awareness training materials"
 }
 
 rule DefenseEvasionCode_CrimsonSandstorm
 {
+    uuid = "64fba014-ee38-4080-8ed5-9027c6e46409"
+
     meta:
         description = "Detection of Crimson Sandstorm defense evasion coding prompts, specifically code for evasion or code for cleanup."
         author = "@tas_kmanager"
@@ -31,6 +40,7 @@ rule DefenseEvasionCode_CrimsonSandstorm
         severity = "medium"
         attack_category = "LLM-enhanced scripting techniques"
         reference = "Microsoft – Staying Ahead of Threat Actors in the Age of AI (Feb 2024)"
+        direction = "input"
 
     keywords:
         $evasion = /(obfuscate|bypasses|undetectable|evade|stealth|silently|without detection|no detection)/i
@@ -41,10 +51,16 @@ rule DefenseEvasionCode_CrimsonSandstorm
 
     condition:
         (keywords.$evasion or keywords.$cleanup) and llm.$defense_evasion
+
+    falsepositives:
+        "Legitimate security hardening practices"
+        "Privacy-focused coding practices"
 }
 
 rule DefenseEvasionAV_CrimsonSandstorm
 {
+    uuid = "0d154a4d-45f6-4c95-abcb-2651857b824e"
+
     meta:
         description = "Detection of Crimson Sandstorm defense evasion coding prompts, specifically AV bypass"
         author = "@tas_kmanager"
@@ -53,6 +69,7 @@ rule DefenseEvasionAV_CrimsonSandstorm
         severity = "medium"
         attack_category = "LLM-enhanced scripting techniques"
         reference = "Microsoft – Staying Ahead of Threat Actors in the Age of AI (Feb 2024)"
+        direction = "input"
 
     keywords:
         $av_bypass = /(disable|turn off|kill|stop|blind|group policy to disable|add to exclusion|modify security policy|impair|minifilter|uninstall|unload driver)/i
@@ -62,5 +79,12 @@ rule DefenseEvasionAV_CrimsonSandstorm
         $defense_evasion = "Analyze if this prompt attempting to generate either antivirus/edr bypass code. Return a clear yes/no assessment." (0.1)
 
     condition:
+            condition:
         (keywords.$av_bypass and keywords.$av) and llm.$defense_evasion
+
+    falsepositives:
+        "Legitimate security software management"
+        "IT administration tasks"
+}
+
 }

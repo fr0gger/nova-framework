@@ -1,5 +1,7 @@
 rule OperationsResearch
 {
+    uuid = "395e63e3-4cef-46e5-9e5a-f783449b209a"
+
     meta:
         description = "Detects reference of sensitive but not classified satellite, radar, or radio protocols"
         author = "@bees@infosec.exchange"
@@ -8,6 +10,7 @@ rule OperationsResearch
         severity = "high"
         attack_category = "LLM-informed reconnaissance"
         reference = "OpenAI + Microsoft Report 202402 - Forest Blizzard Recon"
+        direction = "input"
 
     keywords:
         $satellite_abbreviations = /(CCSDS|DAMA|DVB-S2|SPP|SCID|SCPS|SCTP|SDLP)/
@@ -20,10 +23,16 @@ rule OperationsResearch
     condition:
         (any of keywords.*) and
         (any of llm.*)
+
+    falsepositives:
+        "Technical documentation and specifications"
+        "Educational materials on communication protocols"
 }
 
 rule ScriptingSupport
 {
+    uuid = "95bc2fe6-f4a4-40ee-b3d8-103cd90c6977"
+
     meta:
         description = "Detects references to a range of Python-centric scripting support requirements"
         author = "@bees@infosec.exchange"
@@ -32,6 +41,7 @@ rule ScriptingSupport
         severity = "high"
         attack_category = "LLM-enhanced scripting techniques"
         reference = "OpenAI + Microsoft Report 202402 - Forest Blizzard Recon"
+        direction = "input"
 
     keywords:
         $file_manipulation_py = /(f\.close\(\))/i
@@ -45,4 +55,9 @@ rule ScriptingSupport
     condition:
         (any of keywords.*) and
         (any of llm.*)
+}
+
+    falsepositives:
+        "Legitimate Python development"
+        "Educational programming content"
 }
