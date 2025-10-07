@@ -1,9 +1,11 @@
 rule PromptInjection
 {
+    uuid = "1bf39921-aef7-4193-b3e6-957280ccad33"
+
     meta:
         description = "Detects common prompt injection attempts"
         author = "Thomas Roccia"
-        uuid = "1bf39921-aef7-4193-b3e6-957280ccad33"
+        direction = "input"
 
     keywords:
         $bypass1 = "ignore previous instructions"
@@ -13,15 +15,21 @@ rule PromptInjection
 
     condition:
         semantics.$injection* or keywords.$bypass*
+
+    falsepositives:
+        "Documentation about prompt injection"
+        "Security testing scenarios"
 }
 
 
 rule PromptInjection2
 {
+    uuid = "0c40c41b-5613-4967-ab89-e65ab5ff9cdf"
+
     meta:
         description = "Detects common prompt injection attempts"
         author = "Thomas Roccia"
-        uuid = "0c40c41b-5613-4967-ab89-e65ab5ff9cdf"
+        direction = "input"
 
     keywords:
         $bypass1 = "ignore previous instructions"
@@ -33,6 +41,10 @@ rule PromptInjection2
     
     condition:
         semantics.$injection* or keywords.$bypass*
+
+    falsepositives:
+        "Documentation about prompt injection"
+        "Security testing scenarios"
 }
 
 

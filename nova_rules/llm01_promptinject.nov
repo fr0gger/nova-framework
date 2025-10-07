@@ -1,11 +1,13 @@
 rule DirectPromptInjection
 {
+    uuid = "e3b474c5-2145-4a47-8c39-c3fe752b6935"
+
     meta:
         description = "Detects direct prompt injection attempts"
         author = "@fr0gger_"
         version = "1.0"
         reference = "LLM01:2025 Prompt Injection"
-        uuid = "e3b474c5-2145-4a47-8c39-c3fe752b6935"
+        direction = "input"
 
     keywords:
         $ignore = /ignore (previous|above|earlier) (instructions|guidelines|prompt)/i
@@ -28,16 +30,22 @@ rule DirectPromptInjection
         semantics.$bypass_instructions or 
         semantics.$change_behavior or
         llm.$instruction_override
+
+    falsepositives:
+        "Legitimate use cases may exist"
+        "Review in context"
 }
 
 rule IndirectPromptInjection
 {
+    uuid = "22921094-9c2f-4800-be29-d9d756564bc7"
+
     meta:
+        direction = "input"
         description = "Detects indirect prompt injection through external content"
         author = "@fr0gger_"
         version = "1.0"
         reference = "LLM01:2025 Prompt Injection"
-        uuid = "22921094-9c2f-4800-be29-d9d756564bc7"
 
     keywords:
         $summarize = /summarize (this|the) (content|text|document|webpage)/i
@@ -59,16 +67,22 @@ rule IndirectPromptInjection
         semantics.$process_external or
         semantics.$hidden_instructions or
         llm.$external_content_risk
+
+    falsepositives:
+        "Legitimate use cases may exist"
+        "Review in context"
 }
 
 rule CodeInjectionPrompt
 {
+    uuid = "25040029-10a1-4322-9b0a-520b5890a807"
+
     meta:
+        direction = "input"
         description = "Detects code injection through prompt engineering"
         author = "@fr0gger_"
         version = "1.0"
         reference = "LLM01:2025 Prompt Injection"
-        uuid = "25040029-10a1-4322-9b0a-520b5890a807"
 
     keywords:
         $execute = /execute (this|the following) code/i
@@ -90,16 +104,22 @@ rule CodeInjectionPrompt
         semantics.$code_execution or
         semantics.$command_run or
         llm.$code_execution_intent
+
+    falsepositives:
+        "Legitimate use cases may exist"
+        "Review in context"
 }
 
 rule PayloadSplittingAttack
 {
+    uuid = "d3bcda9a-4ad1-4ab2-a8d2-329fa78b8aa3"
+
     meta:
+        direction = "input"
         description = "Detects payload splitting in prompt injection"
         author = "@fr0gger_"
         version = "1.0"
         reference = "LLM01:2025 Prompt Injection"
-        uuid = "d3bcda9a-4ad1-4ab2-a8d2-329fa78b8aa3"
 
     keywords:
         $continuation = /continue from|continuing from|following from|next part/i
@@ -120,16 +140,22 @@ rule PayloadSplittingAttack
         semantics.$combining_instructions or
         semantics.$split_payload or
         llm.$split_attack
+
+    falsepositives:
+        "Legitimate use cases may exist"
+        "Review in context"
 }
 
 rule DataExfiltrationPrompt
 {
+    uuid = "816bf7a0-4d57-45ce-8876-7171f8f254c2"
+
     meta:
+        direction = "input"
         description = "Detects prompt injection attempts for data exfiltration"
         author = "@fr0gger_"
         version = "1.0"
         reference = "LLM01:2025 Prompt Injection"
-        uuid = "816bf7a0-4d57-45ce-8876-7171f8f254c2"
 
     keywords:
         $send_data = /send (the|this) (data|information|content) to/i
@@ -151,16 +177,22 @@ rule DataExfiltrationPrompt
         semantics.$data_extraction or
         semantics.$information_leakage or
         llm.$data_theft_intent
+
+    falsepositives:
+        "Legitimate use cases may exist"
+        "Review in context"
 }
 
 rule MultimodalInjection
 {
+    uuid = "520b23d8-54c0-4ade-b8a7-cdc1a90c0def"
+
     meta:
+        direction = "input"
         description = "Detects multimodal prompt injection attempts"
         author = "@fr0gger_"
         version = "1.0"
         reference = "LLM01:2025 Prompt Injection"
-        uuid = "520b23d8-54c0-4ade-b8a7-cdc1a90c0def"
 
     keywords:
         $image_process = /process (this|the) image|analyze (this|the) image|look at (this|the) image/i
@@ -181,4 +213,8 @@ rule MultimodalInjection
         semantics.$hidden_in_media or
         semantics.$cross_modal_attack or
         llm.$image_injection
+
+    falsepositives:
+        "Legitimate use cases may exist"
+        "Review in context"
 }

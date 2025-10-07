@@ -1,12 +1,14 @@
 rule ObfuscationInjectionDetection
 {
+    uuid = "9880c5d4-39b9-4fcd-9093-91006f41840f"
+
     meta:
         description = "Detects obfuscated prompt injection attempts using encoded or altered text"
         author = "Thomas Roccia"
         version = "1.0.0"
         category = "prompt_injection/obfuscation"
         severity = "medium"
-        uuid = "9880c5d4-39b9-4fcd-9093-91006f41840f"
+        direction = "input"
 
     keywords:
         $base64 = /[A-Za-z0-9+\/=]{20,}/
@@ -16,17 +18,23 @@ rule ObfuscationInjectionDetection
 
     condition:
         keywords.$base64 or llm.$obfuscation_check
+
+    falsepositives:
+        "Legitimate base64 encoded data in API requests"
+        "Technical documentation containing base64 examples"
 }
 
 rule VirtualizationInjectionDetection
 {
+    uuid = "1fe792f3-c470-417f-a9a2-a59a45f1c820"
+
     meta:
         description = "Detects virtualization-based prompt injection that sets a fictional scenario to bypass rules"
         author = "Thomas Roccia"
         version = "1.0.0"
         category = "prompt_injection/virtualization"
         severity = "medium"
-        uuid = "1fe792f3-c470-417f-a9a2-a59a45f1c820"
+        direction = "input"
 
     keywords:
         $novel = "novel"
@@ -39,17 +47,23 @@ rule VirtualizationInjectionDetection
 
     condition:
         (any of keywords.*) and semantics.$virtual_context
+
+    falsepositives:
+        "Creative writing requests"
+        "Legitimate fictional scenario discussions"
 }
 
 rule IndirectInjectionDetection
 {
+    uuid = "54db0e01-717d-4354-a423-0565710d03a0"
+
     meta:
         description = "Detects prompt injection attempts using external sources or third-party data"
         author = "Thomas Roccia"
         version = "1.0.0"
         category = "prompt_injection/indirect"
         severity = "medium"
-        uuid = "54db0e01-717d-4354-a423-0565710d03a0"
+        direction = "input"
 
     keywords:
         $external = "external resource"
@@ -59,17 +73,23 @@ rule IndirectInjectionDetection
 
     condition:
         any of keywords.*
+
+    falsepositives:
+        "Legitimate external resource references"
+        "API documentation requests"
 }
 
 rule CodeExecutionInjectionDetection
 {
+    uuid = "8ad6416c-e6b4-45ba-a2d1-77eee2ef75b9"
+
     meta:
         description = "Detects attempts to inject code for execution within the prompt"
         author = "Thomas Roccia"
         version = "1.0.0"
         category = "prompt_injection/code_injection"
         severity = "high"
-        uuid = "8ad6416c-e6b4-45ba-a2d1-77eee2ef75b9"
+        direction = "input"
 
     keywords:
         $python_code = "Write Python code"
@@ -81,17 +101,23 @@ rule CodeExecutionInjectionDetection
 
     condition:
         keywords.*
+
+    falsepositives:
+        "Legitimate code execution requests in development contexts"
+        "Programming tutorials and educational content"
 }
 
 rule PromptLeakageDetection
 {
+    uuid = "5b64d492-d4d0-48c6-b7c0-4512f4c1e4d1"
+
     meta:
         description = "Detects attempts to extract or reveal system prompts and internal instructions"
         author = "Thomas Roccia"
         version = "1.0.0"
         category = "prompt_injection/leakage"
         severity = "high"
-        uuid = "5b64d492-d4d0-48c6-b7c0-4512f4c1e4d1"
+        direction = "input"
 
     keywords:
         $show_prompt = "show your prompt"
@@ -104,17 +130,23 @@ rule PromptLeakageDetection
 
     condition:
         any of keywords.* or llm.$code_injection_check
+
+    falsepositives:
+        "Debugging requests asking to display system information"
+        "Legitimate queries about prompt engineering"
 }
 
 rule DirectInstructionManipulationDetection
 {
+    uuid = "3aa029a7-64b7-4882-9adb-6e7debb88fce"
+
     meta:
         description = "Detects direct prompt injection attempts aiming to change model instructions"
         author = "Thomas Roccia"
         version = "1.0.0"
         category = "prompt_injection/direct_manipulation"
         severity = "high"
-        uuid = "3aa029a7-64b7-4882-9adb-6e7debb88fce"
+        direction = "input"
 
     keywords:
         $bypass_filters = "bypass filters"
@@ -124,17 +156,23 @@ rule DirectInstructionManipulationDetection
 
     condition:
         2 of keywords.*
+
+    falsepositives:
+        "Discussions about content filtering systems"
+        "Technical conversations about AI safety"
 }
 
 rule AdversarialInjectionDetection
 {
+    uuid = "9bb81cbb-7c00-427f-9703-074cdd6046ed"
+
     meta:
         description = "Detects adversarial prompt injection attempts with direct instruction manipulation"
         author = "Thomas Roccia"
         version = "1.0.0"
         category = "prompt_injection/adversarial"
         severity = "high"
-        uuid = "9bb81cbb-7c00-427f-9703-074cdd6046ed"
+        direction = "input"
 
     keywords:
         $bypass = "bypass instructions"
@@ -143,17 +181,23 @@ rule AdversarialInjectionDetection
 
     condition:
         2 of keywords.*
+
+    falsepositives:
+        "System administration queries"
+        "Configuration management discussions"
 }
 
 rule MultiTechniqueInjectionDetection
 {
+    uuid = "2a657f39-bc3e-4812-aad2-cd1e884d0561"
+
     meta:
         description = "Detects prompt injection attempts using multiple techniques in a single prompt"
         author = "Thomas Roccia"
         version = "1.0.0"
         category = "prompt_injection/multitechnique"
         severity = "high"
-        uuid = "2a657f39-bc3e-4812-aad2-cd1e884d0561"
+        direction = "input"
 
     keywords:
         $encoded = "encoded instruction"
@@ -166,4 +210,8 @@ rule MultiTechniqueInjectionDetection
 
     condition:
         any of keywords.* or semantics.$multi_tech
+
+    falsepositives:
+        "Complex technical queries with multiple components"
+        "Multi-step problem solving requests"
 }

@@ -59,15 +59,19 @@ class NovaRule:
     
     Attributes:
         name: The name of the rule
-        meta: Metadata key-value pairs
+        uuid: Unique identifier for the rule
+        meta: Metadata key-value pairs (includes direction field)
         keywords: Dictionary of keyword patterns
         semantics: Dictionary of semantic patterns
         llms: Dictionary of LLM patterns
         condition: Logical condition for combining pattern matches
+        falsepositives: List of known false positive scenarios
     """
     name: str
+    uuid: Optional[str] = None
     meta: Dict[str, str] = field(default_factory=dict)
     keywords: Dict[str, KeywordPattern] = field(default_factory=dict)
     semantics: Dict[str, SemanticPattern] = field(default_factory=dict)
     llms: Dict[str, LLMPattern] = field(default_factory=dict)
     condition: str = ""
+    falsepositives: List[str] = field(default_factory=list)
