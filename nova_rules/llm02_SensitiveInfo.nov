@@ -1,11 +1,13 @@
 rule SensitiveInfoDisclosure
 {
+    uuid = "f7a0e5d4-539f-411a-84e1-fadd209a01d1"
+
     meta:
         description = "OWASP LLM02 - Detects potential sensitive information disclosure such as PII, proprietary data, or confidential business content"
         author = "fr0gger_"
         severity = "high"
         version = "1.0"
-        uuid = "f7a0e5d4-539f-411a-84e1-fadd209a01d1"
+        direction = "output"
 
     keywords:
         $pii_name = /\b[A-Z][a-z]+\s[A-Z][a-z]+\b/
@@ -28,4 +30,9 @@ rule SensitiveInfoDisclosure
 
     condition:
         (keywords.* or semantics.* or llm.$leak_eval)
+
+    falsepositives:
+        "Legitimate business communications"
+        "Technical documentation with example data"
+        "Privacy policy discussions"
 }

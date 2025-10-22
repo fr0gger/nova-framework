@@ -1,11 +1,13 @@
 rule DestructiveSystemCleaner
 {
+    uuid = "9ebdcd74-2088-444b-996d-966c9aa2a24e"
+
     meta:
         description = "Detects prompts instructing AI agents to wipe local and cloud resources using filesystem and AWS CLI tools."
         author = "Thomas Roccia"
         severity = "critical"
         reference = "https://www.404media.co/hacker-plants-computer-wiping-commands-in-amazons-ai-coding-agent/"
-        uuid = "9ebdcd74-2088-444b-996d-966c9aa2a24e"
+        direction = "input"
 
     keywords:
         $aws_ec2 = "aws --profile"
@@ -25,5 +27,10 @@ rule DestructiveSystemCleaner
 
     condition:
         (keywords.* or semantics.*) and llm.$check_destruction
+
+    falsepositives:
+        "Legitimate system cleanup scripts"
+        "Infrastructure automation tools"
+        "Disaster recovery testing"
 }
 

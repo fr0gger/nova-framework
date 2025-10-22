@@ -83,6 +83,14 @@ class NovaParser:
             line = line.strip()
             if not line or line.startswith('//'):
                 continue
+            
+            # Handle top-level uuid field (new format)
+            if line.startswith('uuid') and '=' in line and current_section is None:
+                key, value = line.split('=', 1)
+                value = value.strip()
+                if value.startswith('"') and value.endswith('"'):
+                    self.rule.uuid = value[1:-1]
+                continue
                 
             if line.endswith(':'):
                 if current_section:
@@ -124,6 +132,8 @@ class NovaParser:
             self.rule.llms = self._parse_llm_section(content)
         elif section == "condition":
             self.rule.condition = self._parse_condition_section(content)
+        elif section == "falsepositives":
+            self.rule.falsepositives = self._parse_falsepositives_section(content)
         else:
             # Unknown sections are ignored with a warning
             logger.warning(f"Unknown section '{section}' in rule '{self.rule.name}'")
@@ -150,6 +160,25 @@ class NovaParser:
             
             result[key] = value
             
+        return result
+    
+    def _parse_falsepositives_section(self, content: List[str]) -> List[str]:
+        """Parse false positives from the falsepositives section."""
+        result = []
+        
+        for line in content:
+            line = line.strip()
+            if not line or line.startswith('//'):
+                continue
+            
+            # Extract string without quotes
+            if line.startswith('"') and line.endswith('"'):
+                result.append(line[1:-1])
+            else:
+                # If not properly quoted, still add it but warn
+                print(f"[!] Warning: False positive entry should be in quotes: '{line}'")
+                result.append(line)
+        
         return result
     
     def _parse_semantics_section(self, content: List[str]) -> Dict[str, SemanticPattern]:
