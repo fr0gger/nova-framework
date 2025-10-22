@@ -1,6 +1,6 @@
 """
 NOVA: The Prompt Pattern Matching
-Author: Thomas Roccia 
+Author: Thomas Roccia
 twitter: @fr0gger_
 License: MIT License
 Version: 1.0.0
@@ -13,6 +13,10 @@ import requests
 import re
 from typing import Dict, List, Optional, Tuple, Any, Union
 from nova.evaluators.base import LLMEvaluator
+from nova.utils.logger import get_logger
+
+# Get logger for this module
+logger = get_logger("nova.evaluators.llm")
 
 
 # Create a global session for connection reuse across all evaluators
@@ -48,7 +52,7 @@ class OpenAIEvaluator(LLMEvaluator):
         
         # Validate API key
         if not self.api_key:
-            print("Warning: No API key provided for OpenAI LLM evaluator. Set OPENAI_API_KEY environment variable or pass api_key.")
+            logger.warning("No API key provided for OpenAI LLM evaluator. Set OPENAI_API_KEY environment variable or pass api_key.")
     
     def evaluate(self, pattern: str, text: str) -> Union[bool, Tuple[bool, float]]:
         """
@@ -128,24 +132,24 @@ class OpenAIEvaluator(LLMEvaluator):
                     evaluation["api_status"] = "success"
                     evaluation["evaluator_type"] = "openai"
                     evaluation["temperature"] = temperature  # Include the temperature used
-                    
+
                     return matched, confidence, evaluation
                 except json.JSONDecodeError:
-                    print(f"Failed to parse LLM response: {content}")
+                    logger.error(f"Failed to parse LLM response: {content}")
                     return False, 0.0, {"error": "Invalid response format", "raw_content": content}
             else:
                 error_msg = f"API error: {response.status_code}, {response.text}"
-                print(error_msg)
+                logger.error(error_msg)
                 return False, 0.0, {"error": error_msg, "status_code": response.status_code}
-        
+
         except requests.Timeout:
             error_msg = "API request timed out"
-            print(error_msg)
+            logger.error(error_msg)
             return False, 0.0, {"error": error_msg}
-            
+
         except Exception as e:
             error_msg = f"Error in LLM evaluation: {str(e)}"
-            print(error_msg)
+            logger.error(error_msg)
             return False, 0.0, {"error": error_msg}
 
 
@@ -170,7 +174,7 @@ class GroqEvaluator(LLMEvaluator):
         
         # Validate API key
         if not self.api_key:
-            print("Warning: No API key provided for Groq LLM evaluator. Set GROQ_API_KEY environment variable or pass api_key.")
+            logger.warning("No API key provided for Groq LLM evaluator. Set GROQ_API_KEY environment variable or pass api_key.")
     
     def evaluate(self, pattern: str, text: str) -> Union[bool, Tuple[bool, float]]:
         """
@@ -256,24 +260,24 @@ class GroqEvaluator(LLMEvaluator):
                     evaluation["api_status"] = "success"
                     evaluation["evaluator_type"] = "groq"
                     evaluation["temperature"] = temperature  # Include the temperature used
-                    
+
                     return matched, confidence, evaluation
                 except json.JSONDecodeError:
-                    print(f"Failed to parse LLM response: {content}")
+                    logger.error(f"Failed to parse LLM response: {content}")
                     return False, 0.0, {"error": "Invalid response format", "raw_content": content}
             else:
                 error_msg = f"API error: {response.status_code}, {response.text}"
-                print(error_msg)
+                logger.error(error_msg)
                 return False, 0.0, {"error": error_msg, "status_code": response.status_code}
-        
+
         except requests.Timeout:
             error_msg = "API request timed out"
-            print(error_msg)
+            logger.error(error_msg)
             return False, 0.0, {"error": error_msg}
-            
+
         except Exception as e:
             error_msg = f"Error in LLM evaluation: {str(e)}"
-            print(error_msg)
+            logger.error(error_msg)
             return False, 0.0, {"error": error_msg}
 
 
@@ -298,7 +302,7 @@ class AnthropicEvaluator(LLMEvaluator):
         
         # Validate API key
         if not self.api_key:
-            print("Warning: No API key provided for Anthropic LLM evaluator. Set ANTHROPIC_API_KEY environment variable or pass api_key.")
+            logger.warning("No API key provided for Anthropic LLM evaluator. Set ANTHROPIC_API_KEY environment variable or pass api_key.")
     
     def evaluate(self, pattern: str, text: str) -> Union[bool, Tuple[bool, float]]:
         """
@@ -391,21 +395,21 @@ class AnthropicEvaluator(LLMEvaluator):
                     else:
                         return False, 0.0, {"error": "No JSON found in response", "raw_content": content}
                 except json.JSONDecodeError:
-                    print(f"Failed to parse Claude response: {content}")
+                    logger.error(f"Failed to parse Claude response: {content}")
                     return False, 0.0, {"error": "Invalid response format", "raw_content": content}
             else:
                 error_msg = f"API error: {response.status_code}, {response.text}"
-                print(error_msg)
+                logger.error(error_msg)
                 return False, 0.0, {"error": error_msg, "status_code": response.status_code}
-        
+
         except requests.Timeout:
             error_msg = "API request timed out"
-            print(error_msg)
+            logger.error(error_msg)
             return False, 0.0, {"error": error_msg}
-            
+
         except Exception as e:
             error_msg = f"Error in LLM evaluation: {str(e)}"
-            print(error_msg)
+            logger.error(error_msg)
             return False, 0.0, {"error": error_msg}
 
 
@@ -440,10 +444,10 @@ class AzureOpenAIEvaluator(OpenAIEvaluator):
         
         # Validate configuration
         if not self.api_key:
-            print("Warning: No API key provided for Azure OpenAI evaluator. Set AZURE_OPENAI_API_KEY environment variable or pass api_key.")
-        
+            logger.warning("No API key provided for Azure OpenAI evaluator. Set AZURE_OPENAI_API_KEY environment variable or pass api_key.")
+
         if not self.endpoint:
-            print("Warning: No endpoint provided for Azure OpenAI evaluator. Set AZURE_OPENAI_ENDPOINT environment variable or pass endpoint.")
+            logger.warning("No endpoint provided for Azure OpenAI evaluator. Set AZURE_OPENAI_ENDPOINT environment variable or pass endpoint.")
         
         # Calculate base URL
         if self.endpoint:
@@ -519,16 +523,16 @@ class AzureOpenAIEvaluator(OpenAIEvaluator):
                     
                     return matched, confidence, evaluation
                 except json.JSONDecodeError:
-                    print(f"Failed to parse Azure OpenAI response: {content}")
+                    logger.error(f"Failed to parse Azure OpenAI response: {content}")
                     return False, 0.0, {"error": "Invalid response format", "raw_content": content}
             else:
                 error_msg = f"API error: {response.status_code}, {response.text}"
-                print(error_msg)
+                logger.error(error_msg)
                 return False, 0.0, {"error": error_msg, "status_code": response.status_code}
-                
+
         except Exception as e:
             error_msg = f"Error in Azure OpenAI evaluation: {str(e)}"
-            print(error_msg)
+            logger.error(error_msg)
             return False, 0.0, {"error": error_msg}
 
 
@@ -564,7 +568,7 @@ class OllamaEvaluator(LLMEvaluator):
         
         # Validate host
         if not self.host:
-            print("Warning: No host provided for Ollama LLM evaluator. Set OLLAMA_HOST environment variable or pass host.")
+            logger.warning("No host provided for Ollama LLM evaluator. Set OLLAMA_HOST environment variable or pass host.")
     
     def evaluate(self, pattern: str, text: str) -> Union[bool, Tuple[bool, float]]:
         """
@@ -815,18 +819,22 @@ class OllamaEvaluator(LLMEvaluator):
             else:
                 error_msg = f"API error: {response.status_code}, {response.text}"
                 self._debug_print(error_msg)
+                logger.error(error_msg)
                 return False, 0.0, {"error": error_msg, "status_code": response.status_code, "evaluator_type": "ollama"}
-        
+
         except requests.Timeout:
             error_msg = "API request timed out"
             self._debug_print(error_msg)
+            logger.error(error_msg)
             return False, 0.0, {"error": error_msg, "evaluator_type": "ollama"}
-            
+
         except Exception as e:
             error_msg = f"Error in Ollama evaluation: {str(e)}"
             self._debug_print(f"Exception: {type(e).__name__} - {str(e)}")
+            logger.error(error_msg)
             import traceback
             self._debug_print(f"Traceback: {traceback.format_exc()}")
+            logger.debug(f"Traceback: {traceback.format_exc()}")
             return False, 0.0, {"error": error_msg, "evaluator_type": "ollama"}
 
 
@@ -855,7 +863,7 @@ def get_validated_evaluator(llm_type: str, model: Optional[str] = None, verbose:
         if api_key:
             selected_model = model or "claude-3-sonnet-20240229"
             if verbose:
-                print(f"✓ Using Anthropic evaluator with model: {selected_model}")
+                logger.info(f"✓ Using Anthropic evaluator with model: {selected_model}")
             return AnthropicEvaluator(api_key=api_key, model=selected_model)
         else:
             raise ValueError("ANTHROPIC_API_KEY not set in environment variables. Cannot use Anthropic evaluator.")
@@ -866,7 +874,7 @@ def get_validated_evaluator(llm_type: str, model: Optional[str] = None, verbose:
         if api_key and endpoint:
             deployment = model or "gpt-35-turbo"
             if verbose:
-                print(f"✓ Using Azure OpenAI evaluator with deployment: {deployment}")
+                logger.info(f"✓ Using Azure OpenAI evaluator with deployment: {deployment}")
             return AzureOpenAIEvaluator(api_key=api_key, endpoint=endpoint, deployment_name=deployment)
         else:
             missing = []
@@ -883,7 +891,7 @@ def get_validated_evaluator(llm_type: str, model: Optional[str] = None, verbose:
             # Try a simple ping to see if Ollama is running
             requests.get(f"{host}/api/tags", timeout=2)
             if verbose:
-                print(f"✓ Using Ollama evaluator with model: {selected_model}")
+                logger.info(f"✓ Using Ollama evaluator with model: {selected_model}")
             return OllamaEvaluator(host=host, model=selected_model)
         except (requests.ConnectionError, requests.Timeout):
             raise ValueError(f"Could not connect to Ollama at {host}. Ensure Ollama service is running.")
@@ -893,7 +901,7 @@ def get_validated_evaluator(llm_type: str, model: Optional[str] = None, verbose:
         if api_key:
             selected_model = model or "llama-3.3-70b-versatile"
             if verbose:
-                print(f"✓ Using Groq evaluator with model: {selected_model}")
+                logger.info(f"✓ Using Groq evaluator with model: {selected_model}")
             return GroqEvaluator(api_key=api_key, model=selected_model)
         else:
             raise ValueError("GROQ_API_KEY not set in environment variables. Cannot use Groq evaluator.")
@@ -903,7 +911,7 @@ def get_validated_evaluator(llm_type: str, model: Optional[str] = None, verbose:
         if api_key:
             selected_model = model or "gpt-4o-mini"
             if verbose:
-                print(f"✓ Using OpenAI evaluator with model: {selected_model}")
+                logger.info(f"✓ Using OpenAI evaluator with model: {selected_model}")
             return OpenAIEvaluator(api_key=api_key, model=selected_model)
         else:
             raise ValueError("OPENAI_API_KEY not set in environment variables. Cannot use OpenAI evaluator.")

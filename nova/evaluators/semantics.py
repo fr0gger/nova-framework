@@ -1,6 +1,6 @@
 """
 NOVA: The Prompt Pattern Matching
-Author: Thomas Roccia 
+Author: Thomas Roccia
 twitter: @fr0gger_
 License: MIT License
 Version: 1.0.0
@@ -11,6 +11,10 @@ from typing import Dict, Tuple, Optional, Union
 import os
 from nova.core.rules import SemanticPattern
 from nova.evaluators.base import SemanticEvaluator
+from nova.utils.logger import get_logger
+
+# Get logger for this module
+logger = get_logger("nova.evaluators.semantics")
 
 # Global model cache to prevent reloading models
 _MODEL_CACHE = {}
@@ -67,8 +71,8 @@ class DefaultSemanticEvaluator(SemanticEvaluator):
             _MODEL_CACHE[self.model_name] = self.model
             return True
         except Exception as e:
-            print(f"Warning: Could not load semantic model ({self.model_name}): {e}")
-            print("Semantic matching will not be available.")
+            logger.warning(f"Could not load semantic model ({self.model_name}): {e}")
+            logger.warning("Semantic matching will not be available.")
             return False
     
     def evaluate(self, pattern: SemanticPattern, text: str) -> Tuple[bool, float]:
@@ -113,7 +117,7 @@ class DefaultSemanticEvaluator(SemanticEvaluator):
             
             # Check if similarity is above threshold
             return score >= pattern.threshold, score
-            
+
         except Exception as e:
-            print(f"Error in semantic matching: {e}")
+            logger.error(f"Error in semantic matching: {e}")
             return False, 0.0

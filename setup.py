@@ -1,31 +1,31 @@
 from setuptools import setup, find_packages
 
 # Core dependencies - minimal for basic functionality (keywords, basic parsing)
+# Using ~= (compatible release) to allow patch updates but prevent breaking changes
 core_requirements = [
-    "requests>=2.25.0",
-    "pyyaml>=5.4.0", 
-    "colorama>=0.4.4"
+    "requests~=2.31.0",
+    "pyyaml~=6.0.1",
+    "colorama~=0.4.6"
 ]
 
 # Advanced LLM dependencies - for semantic matching and LLM evaluation
 llm_requirements = [
-    "sentence-transformers>=2.0.0",
-    "transformers>=4.20.0",
-    "openai>=1.0.0",
-    "anthropic>=0.3.0"
+    "sentence-transformers~=2.3.1",
+    "transformers~=4.36.2",
+    "openai~=1.12.0",
+    "anthropic~=0.18.1"
 ]
 
 # Development dependencies - for testing and development
 dev_requirements = [
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0"
+    "pytest~=7.4.4",
+    "pytest-cov~=4.1.0"
 ]
 
 # Documentation dependencies - for building documentation
 docs_requirements = [
-    "mkdocs>=1.4.0",
-    "mkdocs-material>=8.5.0",
-    "mkdocs-material[imaging]>=8.5.0"
+    "mkdocs~=1.5.3",
+    "mkdocs-material~=9.5.9"
 ]
 
 setup(

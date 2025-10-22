@@ -31,6 +31,9 @@ from nova.core.rules import (
 )
 from nova.core.matcher import NovaMatcher
 from nova.core.parser import NovaParser
+from nova.core.scanner import NovaScanner
+from nova.utils.config import NovaConfig
+from nova.utils.logger import get_logger, set_log_level
 
 __all__ = [
     'KeywordPattern',
@@ -39,4 +42,8 @@ __all__ = [
     'NovaRule',
     'NovaMatcher',
     'NovaParser',
+    'NovaScanner',
+    'NovaConfig',
+    'get_logger',
+    'set_log_level',
 ]

@@ -1,6 +1,6 @@
 """
 NOVA: The Prompt Pattern Matching
-Author: Thomas Roccia 
+Author: Thomas Roccia
 twitter: @fr0gger_
 License: MIT License
 Version: 1.0.0
@@ -11,6 +11,10 @@ from typing import List, Dict, Any, Optional
 from nova.core.matcher import NovaMatcher
 from nova.core.rules import NovaRule
 from nova.evaluators.llm import OpenAIEvaluator, LLMEvaluator
+from nova.utils.logger import get_logger
+
+# Get logger for this module
+logger = get_logger("nova.scanner")
 
 class NovaScanner:
     """
@@ -43,7 +47,7 @@ class NovaScanner:
         
         # Create LLM evaluator only if needed
         if needs_llm:
-            print("Creating single shared LLM evaluator for all rules...")
+            logger.info("Creating single shared LLM evaluator for all rules...")
             self._llm_evaluator = OpenAIEvaluator()
     
     def _rule_needs_llm(self, rule: NovaRule) -> bool:
@@ -81,7 +85,7 @@ class NovaScanner:
             
         # Check if we need to create LLM evaluator (if we don't already have one)
         if self._llm_evaluator is None and self._rule_needs_llm(rule):
-            print("Creating LLM evaluator for newly added rule that requires it...")
+            logger.info("Creating LLM evaluator for newly added rule that requires it...")
             self._llm_evaluator = OpenAIEvaluator()
         
         self.rules.append(rule)
@@ -99,7 +103,7 @@ class NovaScanner:
         """
         # Check if any of the new rules need LLM (if we don't already have one)
         if self._llm_evaluator is None and any(self._rule_needs_llm(rule) for rule in rules):
-            print("Creating LLM evaluator for newly added rules that require it...")
+            logger.info("Creating LLM evaluator for newly added rules that require it...")
             self._llm_evaluator = OpenAIEvaluator()
         
         for rule in rules:
