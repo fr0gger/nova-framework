@@ -1,6 +1,6 @@
 """
 NOVA: The Prompt Pattern Matching
-Author: Thomas Roccia 
+Author: Thomas Roccia
 twitter: @fr0gger_
 License: MIT License
 Version: 1.0.0
@@ -11,6 +11,10 @@ import re
 from typing import Dict, Union
 from nova.core.rules import KeywordPattern
 from nova.evaluators.base import KeywordEvaluator
+from nova.utils.logger import get_logger
+
+# Get logger for this module
+logger = get_logger("nova.evaluators.keywords")
 
 
 class DefaultKeywordEvaluator(KeywordEvaluator):
@@ -33,7 +37,7 @@ class DefaultKeywordEvaluator(KeywordEvaluator):
             try:
                 self._compiled_patterns[key] = re.compile(pattern.pattern, flags)
             except re.error as e:
-                print(f"Warning: Invalid regex pattern for {key}: {e}")
+                logger.warning(f"Invalid regex pattern for {key}: {e}")
                 self._compiled_patterns[key] = None
         else:
             # No need to compile non-regex patterns

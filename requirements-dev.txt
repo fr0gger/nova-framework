@@ -1,14 +1,14 @@
 # Nova Framework Development Requirements
 # Includes all dependencies for development and testing
+# Using ~= (compatible release) to allow patch updates but prevent breaking changes
 
 # Include LLM requirements (which includes basic)
 -r requirements-llm.txt
 
 # Development and testing dependencies
-pytest>=7.0.0
-pytest-cov>=4.0.0
+pytest~=7.4.4
+pytest-cov~=4.1.0
 
 # Documentation dependencies
-mkdocs>=1.4.0
-mkdocs-material>=8.5.0
-mkdocs-material[imaging]>=8.5.0
+mkdocs~=1.5.3
+mkdocs-material~=9.5.9

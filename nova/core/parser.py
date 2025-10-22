@@ -1,6 +1,6 @@
 """
 NOVA: The Prompt Pattern Matching
-Author: Thomas Roccia 
+Author: Thomas Roccia
 twitter: @fr0gger_
 License: MIT License
 Version: 1.0.0
@@ -10,6 +10,10 @@ Description: Temporary patched version of NovaParser that disables strict valida
 import re
 from typing import Dict, List, Optional, Set, Any
 from nova.core.rules import NovaRule, KeywordPattern, SemanticPattern, LLMPattern
+from nova.utils.logger import get_logger
+
+# Get logger for this module
+logger = get_logger("nova.parser")
 
 # Precompile regex patterns for better performance
 RULE_NAME_PATTERN = re.compile(r'rule\s+(\w+)(?:\s*{)?')
@@ -121,8 +125,8 @@ class NovaParser:
         elif section == "condition":
             self.rule.condition = self._parse_condition_section(content)
         else:
-            # Unknown sections are ignored with a [!] Warning
-            print(f"[!] Warning: Unknown section '{section}' in rule '{self.rule.name}'")
+            # Unknown sections are ignored with a warning
+            logger.warning(f"Unknown section '{section}' in rule '{self.rule.name}'")
     
     def _parse_meta_section(self, content: List[str]) -> Dict[str, str]:
         """Parse metadata from the meta section."""

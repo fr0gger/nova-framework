@@ -1,6 +1,6 @@
 """
 NOVA: The Prompt Pattern Matching
-Author: Thomas Roccia 
+Author: Thomas Roccia
 twitter: @fr0gger_
 License: MIT License
 Version: 1.0.0
@@ -13,6 +13,10 @@ import re
 from nova.core.rules import NovaRule, KeywordPattern, SemanticPattern, LLMPattern
 from nova.evaluators.keywords import DefaultKeywordEvaluator
 from nova.evaluators.condition import evaluate_condition
+from nova.utils.logger import get_logger
+
+# Get logger for this module
+logger = get_logger("nova.matcher")
 
 # Optional imports - these may not be available if extras not installed
 DefaultSemanticEvaluator = None
@@ -82,7 +86,7 @@ class NovaMatcher:
                 self.semantic_evaluator = DefaultSemanticEvaluator()
             else:
                 self.semantic_evaluator = None
-                print("Warning: Rule requires semantic evaluation but sentence-transformers not available. Install with: pip install nova-hunting[llm]")
+                logger.warning("Rule requires semantic evaluation but sentence-transformers not available. Install with: pip install nova-hunting[llm]")
         else:
             self.semantic_evaluator = None
             
@@ -96,12 +100,12 @@ class NovaMatcher:
                 self.llm_evaluator = OpenAIEvaluator()
             else:
                 self.llm_evaluator = None
-                print("Warning: Rule requires LLM evaluation but LLM dependencies not available. Install with: pip install nova-hunting[llm]")
+                logger.warning("Rule requires LLM evaluation but LLM dependencies not available. Install with: pip install nova-hunting[llm]")
         else:
             # No evaluator provided and either not needed or not allowed to create
             self.llm_evaluator = None
             if needs_llm:
-                print("Warning: Rule requires LLM evaluation but no evaluator provided and creation disabled.")
+                logger.warning("Rule requires LLM evaluation but no evaluator provided and creation disabled.")
             # Remove the verbose message for rules that don't need LLM evaluation
         
         # Pre-compile keyword patterns for performance
@@ -284,7 +288,7 @@ class NovaMatcher:
                         all_llm_scores[var_name] = confidence
                         llm_matches[var_name] = matched
                 except Exception as e:
-                    print(f"Error evaluating {section}.{var_name}: {str(e)}")
+                    logger.error(f"Error evaluating {section}.{var_name}: {str(e)}")
                     # Default to False on error
                     if section == 'keywords':
                         all_keyword_matches[var_name] = False
