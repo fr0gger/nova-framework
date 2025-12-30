@@ -10,7 +10,7 @@ Description: Core matcher implementation for Nova rules
 from typing import Dict, List, Tuple, Optional, Any, Set, Callable
 import re
 
-from nova.core.rules import NovaRule, KeywordPattern, SemanticPattern, LLMPattern
+from nova.core.rules import NovaRule, KeywordPattern, SemanticPattern, LLMPattern, FuzzyPattern
 from nova.evaluators.keywords import DefaultKeywordEvaluator
 from nova.evaluators.condition import evaluate_condition
 from nova.utils.logger import get_logger
@@ -22,6 +22,7 @@ logger = get_logger("nova.matcher")
 DefaultSemanticEvaluator = None
 OpenAIEvaluator = None
 LLMEvaluator = None
+DefaultFuzzyEvaluator = None 
 
 try:
     from nova.evaluators.semantics import DefaultSemanticEvaluator
@@ -30,6 +31,11 @@ except ImportError:
 
 try:
     from nova.evaluators.llm import OpenAIEvaluator, LLMEvaluator
+except ImportError:
+    pass
+
+try:
+    from nova.evaluators.fuzzy import DefaultFuzzyEvaluator
 except ImportError:
     pass
 
@@ -44,6 +50,7 @@ class NovaMatcher:
     def __init__(self, 
                  rule: NovaRule,
                  keyword_evaluator: Optional[DefaultKeywordEvaluator] = None,
+                 fuzzy_evaluator: Optional[Any] = None,
                  semantic_evaluator: Optional[Any] = None,  # DefaultSemanticEvaluator might not be available
                  llm_evaluator: Optional[Any] = None,       # LLMEvaluator might not be available
                  create_llm_evaluator: bool = True):
@@ -77,7 +84,14 @@ class NovaMatcher:
             needs_llm = True
         elif rule and 'llm.' in rule.condition.lower():
             needs_llm = True
-        
+
+        needs_fuzzy = False
+        # Check if rule has fuzzy section (handle attribute safely)
+        if rule and rule.fuzzy:
+            needs_fuzzy = True
+        elif rule and 'fuzzy' in rule.condition.lower():
+            needs_fuzzy = True
+
         # Only initialize semantic evaluator if needed
         if needs_semantic:
             if semantic_evaluator:
@@ -107,6 +121,18 @@ class NovaMatcher:
             if needs_llm:
                 logger.warning("Rule requires LLM evaluation but no evaluator provided and creation disabled.")
             # Remove the verbose message for rules that don't need LLM evaluation
+
+        if fuzzy_evaluator:
+            self.fuzzy_evaluator = fuzzy_evaluator
+        elif needs_fuzzy:
+            if DefaultFuzzyEvaluator is not None:
+                self.fuzzy_evaluator = DefaultFuzzyEvaluator()
+            else:
+                self.fuzzy_evaluator = None
+                logger.warning("Rule requires fuzzy evaluation but rapidfuzz not available.")
+        else:
+            self.fuzzy_evaluator = None
+        
         
         # Pre-compile keyword patterns for performance
         if rule:
@@ -144,23 +170,24 @@ class NovaMatcher:
         """
         needed_patterns = {
             'keywords': set(),
+            'fuzzy' : set(),
             'semantics': set(),
             'llm': set(),
             'section_wildcards': set()
         }
         
         # Check for section wildcards
-        for section in ['keywords', 'semantics', 'llm']:
+        for section in ['keywords', 'semantics', 'llm' , 'fuzzy']:
             if f"{section}.*" in condition:
                 needed_patterns['section_wildcards'].add(section)
                 
         # Check for "any of" section wildcards
-        for section in ['keywords', 'semantics', 'llm']:
+        for section in ['keywords', 'semantics', 'llm' , 'fuzzy']:
             if f"any of {section}.*" in condition:
                 needed_patterns['section_wildcards'].add(section)
 
         # Check for direct variable references with section prefixes
-        for section in ['keywords', 'semantics', 'llm']:
+        for section in ['keywords', 'semantics', 'llm' , 'fuzzy']:
             # Exact references: "section.$var"
             pattern = rf'{section}\.\$([a-zA-Z0-9_]+)(?!\*)'
             for match in re.finditer(pattern, condition):
@@ -188,6 +215,8 @@ class NovaMatcher:
                 needed_patterns['semantics'].add(var_name)
             elif var_name in self.rule.llms:
                 needed_patterns['llm'].add(var_name)
+            elif var_name in self.rule.fuzzy:
+                needed_patterns['fuzzy'].add(var_name)
         
         # Check for "any of" wildcards
         any_of_pattern = r'any\s+of\s+\(\$([a-zA-Z0-9_]+)\*\)'
@@ -197,6 +226,7 @@ class NovaMatcher:
             # Add all matching variables from all sections
             for section, patterns in [
                 ('keywords', self.rule.keywords),
+                ('fuzzy' , self.rule.fuzzy),
                 ('semantics', self.rule.semantics),
                 ('llm', self.rule.llms)
             ]:
@@ -222,6 +252,7 @@ class NovaMatcher:
         
         # Track all evaluation results for debugging
         all_keyword_matches = {}
+        all_fuzzy_matches = {}
         all_semantic_matches = {}
         all_semantic_scores = {}
         all_llm_matches = {}
@@ -232,6 +263,7 @@ class NovaMatcher:
         
         # Initialize filtered dictionaries to hold results needed for condition evaluation
         keyword_matches = {}
+        fuzzy_matches = {}
         semantic_matches = {}
         llm_matches = {}
         
@@ -258,6 +290,11 @@ class NovaMatcher:
                     temperature = pattern.threshold
                     lazy_evaluations[('llm', key)] = lambda p=pattern, t=temperature: self.llm_evaluator.evaluate_prompt(p.pattern, prompt, temperature=t)
         
+        if self.fuzzy_evaluator:
+            for key , pattern in self.rule.fuzzy.items():
+                if key in needed_patterns['fuzzy'] or 'fuzzy' in needed_patterns['section_wildcards']:
+                    lazy_evaluations[('fuzzy', key)] = lambda p=pattern, k=key: self.fuzzy_evaluator.evaluate(p, prompt)
+
         # First evaluate only the patterns that are directly referenced in the condition
         # Create a list of sections and variables to evaluate based on what evaluators are available
         patterns_to_evaluate = [('keywords', name) for name in needed_patterns['keywords']]
@@ -267,6 +304,9 @@ class NovaMatcher:
             
         if self.llm_evaluator:
             patterns_to_evaluate += [('llm', name) for name in needed_patterns['llm']]
+        
+        if self.fuzzy_evaluator:
+            patterns_to_evaluate += [('fuzzy', name) for name in needed_patterns['fuzzy']]
             
         # Evaluate each pattern
         for section, var_name in patterns_to_evaluate:
@@ -287,6 +327,10 @@ class NovaMatcher:
                         all_llm_matches[var_name] = matched
                         all_llm_scores[var_name] = confidence
                         llm_matches[var_name] = matched
+                    elif section == 'fuzzy':
+                        matched = lazy_evaluations[eval_key]()
+                        all_fuzzy_matches[var_name] = matched
+                        fuzzy_matches[var_name] = matched
                 except Exception as e:
                     logger.error(f"Error evaluating {section}.{var_name}: {str(e)}")
                     # Default to False on error
@@ -301,6 +345,9 @@ class NovaMatcher:
                         all_llm_matches[var_name] = False
                         all_llm_scores[var_name] = 0.0
                         llm_matches[var_name] = False
+                    elif section == 'fuzzy':
+                        all_fuzzy_matches[var_name] = False
+                        fuzzy_matches[var_name] = False
         
         # Process section wildcards if needed
         for section in needed_patterns['section_wildcards']:
@@ -338,6 +385,14 @@ class NovaMatcher:
                         except Exception:
                             all_llm_matches[key] = False
                             all_llm_scores[key] = 0.0
+            elif section == 'fuzzy' and self.fuzzy_evaluator and not all_fuzzy_matches:
+                for key, pattern in self.rule.fuzzy.items():
+                    if key not in all_fuzzy_matches:
+                        try:
+                            result = self.fuzzy_evaluator.evaluate(pattern, prompt)
+                            all_fuzzy_matches[key] = result
+                        except Exception:
+                            all_fuzzy_matches[key] = False
         
         # Evaluate condition if provided
         has_match = False
@@ -351,13 +406,16 @@ class NovaMatcher:
                 semantic_matches.update(all_semantic_matches)
             if 'llm' in needed_patterns['section_wildcards'] and self.llm_evaluator:
                 llm_matches.update(all_llm_matches)
+            if 'fuzzy' in needed_patterns['section_wildcards'] and self.fuzzy_evaluator:
+                fuzzy_matches.update(all_fuzzy_matches)
                 
             # Use the condition evaluator with filtered match types
             condition_result = evaluate_condition(
                 condition, 
-                keyword_matches, 
+                keyword_matches,
                 semantic_matches, 
-                llm_matches
+                llm_matches,
+                fuzzy_matches
             )
             has_match = condition_result
         else:
@@ -372,6 +430,7 @@ class NovaMatcher:
             'matching_keywords': {k: v for k, v in keyword_matches.items() if v},
             'matching_semantics': {k: v for k, v in semantic_matches.items() if v},
             'matching_llm': {k: v for k, v in llm_matches.items() if v},
+            'matching_fuzzy': {k: v for k, v in fuzzy_matches.items() if v},
             'semantic_scores': all_semantic_scores,
             'llm_scores': all_llm_scores,
             'debug': {
@@ -379,7 +438,8 @@ class NovaMatcher:
                 'condition_result': condition_result,
                 'all_keyword_matches': all_keyword_matches,
                 'all_semantic_matches': all_semantic_matches,
-                'all_llm_matches': all_llm_matches
+                'all_llm_matches': all_llm_matches,
+                'all_fuzzy_matches': all_fuzzy_matches
             }
         }
         

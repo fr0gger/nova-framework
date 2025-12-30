@@ -9,7 +9,7 @@ Description: Temporary patched version of NovaParser that disables strict valida
 
 import re
 from typing import Dict, List, Optional, Set, Any
-from nova.core.rules import NovaRule, KeywordPattern, SemanticPattern, LLMPattern
+from nova.core.rules import NovaRule, KeywordPattern, SemanticPattern, LLMPattern , FuzzyPattern
 from nova.utils.logger import get_logger
 
 # Get logger for this module
@@ -18,10 +18,10 @@ logger = get_logger("nova.parser")
 # Precompile regex patterns for better performance
 RULE_NAME_PATTERN = re.compile(r'rule\s+(\w+)(?:\s*{)?')
 RULE_START_PATTERN = re.compile(r'rule\s+\w+\s*{?')
-SECTION_WILDCARD_PATTERN = re.compile(r'(keywords|semantics|llm)\.\*')
-VAR_PREFIX_PATTERN = re.compile(r'(keywords|semantics|llm)\.\$([a-zA-Z0-9_]+)\*')
+SECTION_WILDCARD_PATTERN = re.compile(r'(keywords|semantics|llm|fuzzy)\.\*')
+VAR_PREFIX_PATTERN = re.compile(r'(keywords|semantics|llm|fuzzy)\.\$([a-zA-Z0-9_]+)\*')
 ANY_OF_WILDCARD_PATTERN = re.compile(r'any\s+of\s+\(\$([a-zA-Z0-9_]+)\*\)')
-DIRECT_VAR_PATTERN = re.compile(r'(keywords|semantics|llm)\.\$([a-zA-Z0-9_]+)')
+DIRECT_VAR_PATTERN = re.compile(r'(keywords|semantics|llm|fuzzy)\.\$([a-zA-Z0-9_]+)')
 STANDALONE_VAR_PATTERN = re.compile(r'(?<![a-zA-Z0-9_\.])(\$[a-zA-Z0-9_]+)')
 NESTED_QUANTIFIERS_PATTERN = re.compile(r'\b(any|all|[0-9]+)\s+of\s+(any|all|[0-9]+)\s+of\b')
 SECTION_REF_PATTERN = re.compile(r'\b([a-zA-Z_][a-zA-Z0-9_]*)\.\$')
@@ -46,7 +46,8 @@ class NovaParser:
         self.variable_names = {
             'keywords': set(),
             'semantics': set(),
-            'llm': set()
+            'llm': set(),
+            'fuzzy': set()
         }
     
     def parse(self, content: str) -> NovaRule:
@@ -68,7 +69,8 @@ class NovaParser:
         self.variable_names = {
             'keywords': set(),
             'semantics': set(),
-            'llm': set()
+            'llm': set(),
+            'fuzzy': set()
         }
         
         # Check rule declaration and extract name
@@ -118,6 +120,8 @@ class NovaParser:
             self.rule.meta = self._parse_meta_section(content)
         elif section == "keywords":
             self.rule.keywords = self._parse_keywords_section(content)
+        elif section == "fuzzy":
+            self.rule.fuzzy = self._parse_fuzzy_section(content)
         elif section == "semantics":
             self.rule.semantics = self._parse_semantics_section(content)
         elif section == "llm":
@@ -149,6 +153,51 @@ class NovaParser:
                 value = value[1:-1]
             
             result[key] = value
+            
+        return result
+
+    def _parse_fuzzy_section(self , content: List[str]) -> Dict[str, FuzzyPattern]:
+        """Parse fuzzy patterns from the fuzzy section."""
+        result = {}
+        seen_variables = set()
+        
+        for line_num, line in enumerate(content):
+            # Skip empty lines and comments
+            if not line or line.strip().startswith('//') or line.strip().startswith('#'):
+                continue
+            
+            # Syntax: $var = "pattern" (threshold)
+            if '=' not in line:
+                raise NovaParserError(
+                    f"Invalid fuzzy pattern at line {line_num}: '{line}'. Format: '$var = \"pattern\" (threshold)'")
+            
+            key, value_part = map(str.strip, line.split('=', 1))
+            
+            # Validation
+            if not key.startswith('$'):
+                raise NovaParserError(f"Invalid fuzzy variable '{key}'. Must start with $")
+            
+            if key in seen_variables:
+                raise NovaParserError(f"Duplicate variable '{key}' in fuzzy section.")
+            
+            seen_variables.add(key)
+            self.variable_names['fuzzy'].add(key)
+            
+            # Extract pattern and threshold
+            # Expected value_part: "admin" (80)
+            match = re.search(r'"([^"]+)"\s*\((\d+)\)', value_part)
+            if not match:
+                raise NovaParserError(
+                    f"Invalid fuzzy value '{value_part}'. format: \"text\" (80)")
+            
+            pattern_text = match.group(1)
+            threshold = int(match.group(2))
+            
+            if not (0 <= threshold <= 100):
+                raise NovaParserError(f"Fuzzy threshold {threshold} must be between 0 and 100")
+            
+            # Create object
+            result[key] = FuzzyPattern(pattern=pattern_text, threshold=threshold)
             
         return result
     
@@ -400,7 +449,7 @@ class NovaParser:
                 f"Invalid nested quantifiers at position {pos}: '{match.group(0)}'. Quantifiers cannot be nested. Context: '...{context}...'")
         
         # Validate section references - check for misspelled section names
-        valid_sections = ['keywords', 'semantics', 'llm']
+        valid_sections = ['keywords', 'semantics', 'llm' , 'fuzzy']
         
         # Find all potential section references that aren't in our valid list
         for match in SECTION_REF_PATTERN.finditer(condition):
@@ -527,7 +576,7 @@ class NovaParser:
         """
         try:
             # Check that at least one pattern type is specified
-            if not self.rule.keywords and not self.rule.semantics and not self.rule.llms:
+            if not self.rule.keywords and not self.rule.semantics and not self.rule.llms and not self.rule.fuzzy:
                 raise NovaParserError(
                     f"Rule '{self.rule.name}' must specify at least one of: keywords, semantics, llm")
             
@@ -592,12 +641,12 @@ class NovaParser:
                 syntax_check_condition = cleaned_condition
                 
                 # Replace section wildcards first since they're easier to detect
-                section_wildcards = ["keywords.*", "semantics.*", "llm.*"]
+                section_wildcards = ["keywords.*", "semantics.*", "llm.*" , "fuzzy.*"]
                 for wildcard in section_wildcards:
                     syntax_check_condition = syntax_check_condition.replace(wildcard, "True")
                 
                 # Replace "any of section.*" patterns - these cause syntax errors
-                syntax_check_condition = re.sub(r'any\s+of\s+(keywords|semantics|llm)\.\*', 'True', syntax_check_condition)
+                syntax_check_condition = re.sub(r'any\s+of\s+(keywords|semantics|llm|fuzzy)\.\*', 'True', syntax_check_condition)
                 
                 # Replace variable references with True
                 syntax_check_condition = re.sub(r'[a-zA-Z0-9_]+\.\$[a-zA-Z0-9_]+\*?', 'True', syntax_check_condition)
@@ -690,7 +739,8 @@ class NovaParser:
         section_wildcards = {
             'keywords': False,
             'semantics': False,
-            'llm': False
+            'llm': False,
+            'fuzzy': False
         }
         
         for section in section_wildcards:
@@ -700,7 +750,7 @@ class NovaParser:
                 used_variables.update(self.variable_names[section])
         
         # Check for section-specific prefix wildcards (e.g., keywords.$bypass*)
-        for section in ['keywords', 'semantics', 'llm']:
+        for section in ['keywords', 'semantics', 'llm' , 'fuzzy']:
             pattern = rf'{section}\.\$([a-zA-Z0-9_]+)\*'
             for match in re.finditer(pattern, condition):
                 prefix = match.group(1)
@@ -720,7 +770,7 @@ class NovaParser:
                         used_variables.add(var)
         
         # Check for direct variable references
-        var_pattern = r'(keywords|semantics|llm)\.\$([a-zA-Z0-9_]+)(?!\*)'
+        var_pattern = r'(keywords|semantics|llm|fuzzy)\.\$([a-zA-Z0-9_]+)(?!\*)'
         for match in re.finditer(var_pattern, condition):
             section = match.group(1)
             var_name = f"${match.group(2)}"
@@ -743,7 +793,7 @@ class NovaParser:
         
         # Simple check for explicitly referenced variables (only for non-wildcard vars)
         # Patterns like 'semantics.$var' and 'llm.$var'
-        for section in ['semantics', 'llm']:
+        for section in ['semantics', 'llm' , 'fuzzy']:
             pattern = rf'{section}\.\$(\w+)'
             for match in re.finditer(pattern, condition):
                 var_name = f"${match.group(1)}"
